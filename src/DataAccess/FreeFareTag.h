@@ -7,12 +7,20 @@
 
 #include <freefare.h>
 #include <string>
+#include <DBO/Result.h>
 
 class FreeFareTag
 {
 public:
+
     FreeFareTag(FreefareTag tag);
     ~FreeFareTag();
+
+    ResultBool authenticate(int sector, std::string key, int keyType);
+
+    ResultString readSector(int sector, std::string key, int keyType);
+
+    ResultString readBlock(int sector, int block, std::string key, int keyType);
 
     const freefare_tag * getTag() const;
 
