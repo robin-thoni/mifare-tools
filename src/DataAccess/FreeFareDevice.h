@@ -6,16 +6,19 @@
 #define MIFARE_TOOLS_FREEFAREDEVICE_H
 
 
-#include "NfcDevice.h"
 #include <freefare.h>
+#include "NfcDevice.h"
+#include "FreeFareTag.h"
 
 class FreeFareDevice
 {
 public:
-    FreeFareDevice(NfcDevice* device);
+    FreeFareDevice(std::shared_ptr<NfcDevice> device);
+
+    Result<std::vector<std::shared_ptr<FreeFareTag>>> getTags();
 
 private:
-    NfcDevice* _device;
+    std::shared_ptr<NfcDevice> _device;
 };
 
 

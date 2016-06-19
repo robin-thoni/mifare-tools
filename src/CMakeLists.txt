@@ -13,7 +13,7 @@ set(SOURCE_FILES
   DataAccess/LibNfc.cpp
   DataAccess/LibNfc.h
         DataAccess/NfcDevice.cpp
-        DataAccess/NfcDevice.h DataAccess/FreeFareDevice.cpp DataAccess/FreeFareDevice.h)
+        DataAccess/NfcDevice.h DataAccess/FreeFareDevice.cpp DataAccess/FreeFareDevice.h DataAccess/FreeFareTag.cpp DataAccess/FreeFareTag.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${LIBS})

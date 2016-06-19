@@ -5,6 +5,7 @@
 #ifndef MIFARE_TOOLS_LIBNFC_H
 #define MIFARE_TOOLS_LIBNFC_H
 
+#include <memory>
 #include <nfc/nfc.h>
 #include "NfcDevice.h"
 #include "DBO/Result.h"
@@ -23,7 +24,7 @@ public:
 
     bool isInitialized();
 
-    Result<std::vector<NfcDevice*>> getDevices();
+    Result<std::vector<std::shared_ptr<NfcDevice>>> getDevices();
 
     static std::string getVersion();
 

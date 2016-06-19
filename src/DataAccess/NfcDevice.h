@@ -25,15 +25,11 @@ public:
 
     bool isOpened();
 
-    const std::string &getConnStr() const
-    {
-        return _connStr;
-    }
+    const std::string & getConnStr() const;
 
-    void setConnStr(const std::string &connStr)
-    {
-        _connStr = connStr;
-    }
+    void setConnStr(const std::string &connStr);
+
+    nfc_device * getDevice() const;
 
 private:
     std::string _connStr;

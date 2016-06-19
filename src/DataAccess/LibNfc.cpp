@@ -2,6 +2,7 @@
 // Created by robin on 6/19/16.
 //
 
+#include <boost/shared_ptr.hpp>
 #include "LibNfc.h"
 
 LibNfc::LibNfc()
@@ -44,21 +45,21 @@ void LibNfc::clean()
     }
 }
 
-Result<std::vector<NfcDevice*>> LibNfc::getDevices()
+Result<std::vector<std::shared_ptr<NfcDevice>>> LibNfc::getDevices()
 {
     if (!isInitialized()) {
-        return Result<std::vector<NfcDevice*>>::error("LibNfc is not initialized");
+        return Result<std::vector<std::shared_ptr<NfcDevice>>>::error("LibNfc is not initialized");
     }
     nfc_connstring devices[16];
     size_t count = nfc_list_devices(_context, devices, sizeof(devices));
     if (count < 0) {
-        return Result<std::vector<NfcDevice*>>::error("Failed to list NFC devices");
+        return Result<std::vector<std::shared_ptr<NfcDevice>>>::error("Failed to list NFC devices");
     }
-    std::vector<NfcDevice*> devicesList;
+    std::vector<std::shared_ptr<NfcDevice>> devicesList;
     for (size_t i = 0; i < count; ++i) {
-        devicesList.push_back(new NfcDevice(this, devices[i]));
+        devicesList.push_back(std::make_shared<NfcDevice>(this, devices[i]));
     }
-    return Result<std::vector<NfcDevice*>>::ok(devicesList);
+    return Result<std::vector<std::shared_ptr<NfcDevice>>>::ok(devicesList);
 }
 
 nfc_context *LibNfc::getContext() const

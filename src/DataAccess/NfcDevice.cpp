@@ -40,3 +40,18 @@ void NfcDevice::close()
         _device = 0;
     }
 }
+
+nfc_device *NfcDevice::getDevice() const
+{
+    return _device;
+}
+
+void NfcDevice::setConnStr(const std::string &connStr)
+{
+    _connStr = connStr;
+}
+
+const std::string &NfcDevice::getConnStr() const
+{
+    return _connStr;
+}
