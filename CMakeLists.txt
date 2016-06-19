@@ -3,6 +3,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/CMakeMod
 set(PROJECT_NAME mifare-tools)
 project(${PROJECT_NAME})
 find_package(GTest)
+set(LIBS ${LIBS} nfc)
 add_subdirectory(src)
 if (GTEST_FOUND)
     enable_testing()

@@ -10,7 +10,10 @@ set(SOURCE_FILES
   DBO/CommandLineOption.h
   DBO/Result.hxx
   DBO/Result.h
-  )
+  DataAccess/LibNfc.cpp
+  DataAccess/LibNfc.h
+        DataAccess/NfcDevice.cpp
+        DataAccess/NfcDevice.h DataAccess/FreeFareDevice.cpp DataAccess/FreeFareDevice.h)
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${LIBS})
