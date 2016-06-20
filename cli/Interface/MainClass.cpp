@@ -5,8 +5,8 @@
 #include <iostream>
 #include <sysexits.h>
 #include "DBO/Result.h"
-#include "DataAccess/LibNfc.h"
-#include "DataAccess/FreeFareDevice.h"
+#include "Business/LibNfc.h"
+#include "Business/FreeFareDevice.h"
 #include "CommandLineParser.h"
 #include "MainClass.h"
 
