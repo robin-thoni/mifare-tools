@@ -1,19 +1,17 @@
 include_directories(.)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(SOURCE_FILES
-  main.cpp
-  Interface/MainClass.cpp
-  Interface/MainClass.h
-  Interface/CommandLineParser.cpp
-  Interface/CommandLineParser.h
-  DBO/CommandLineOption.cpp
-  DBO/CommandLineOption.h
-  DBO/Result.hxx
-  DBO/Result.h
-  DataAccess/LibNfc.cpp
-  DataAccess/LibNfc.h
+        DBO/Result.hxx
+        DBO/Result.h
+        DataAccess/LibNfc.cpp
+        DataAccess/LibNfc.h
         DataAccess/NfcDevice.cpp
-        DataAccess/NfcDevice.h DataAccess/FreeFareDevice.cpp DataAccess/FreeFareDevice.h DataAccess/FreeFareTag.cpp DataAccess/FreeFareTag.h)
+        DataAccess/NfcDevice.h
+        DataAccess/FreeFareDevice.cpp
+        DataAccess/FreeFareDevice.h
+        DataAccess/FreeFareTag.cpp
+        DataAccess/FreeFareTag.h
+        )
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${LIBS})

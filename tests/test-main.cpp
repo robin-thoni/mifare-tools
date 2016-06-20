@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string.h>
 #include <gtest/gtest.h>
+#include <DataAccess/LibNfc.h>
 
 TEST(None, None)
 {
@@ -9,6 +10,7 @@ TEST(None, None)
 
 int main(int argc, char* argv[])
 {
+  std::cout << "LibNfc version: " << LibNfc::getVersion() << std::endl;
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

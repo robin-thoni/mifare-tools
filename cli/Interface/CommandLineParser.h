@@ -5,7 +5,7 @@
 #ifndef PDNS_SLAVE_COMMANDLINEPARSER_H
 #define PDNS_SLAVE_COMMANDLINEPARSER_H
 
-# include "DBO/CommandLineOption.h"
+# include "../DBO/CommandLineOption.h"
 
 class CommandLineParser
 {
