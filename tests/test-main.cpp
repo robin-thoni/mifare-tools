@@ -61,6 +61,36 @@ TEST(StringUtils, rawToHumanString)
             "000102030405060708090a0b0c0d0e0f");
 }
 
+TEST(StringUtils, toLower)
+{
+  ASSERT_EQ(StringUtils::toLower('a'), 'a');
+  ASSERT_EQ(StringUtils::toLower('z'), 'z');
+  ASSERT_EQ(StringUtils::toLower('A'), 'a');
+  ASSERT_EQ(StringUtils::toLower('Z'), 'z');
+  ASSERT_EQ(StringUtils::toLower('1'), '1');
+  ASSERT_EQ(StringUtils::toLower('@'), '@');
+}
+
+TEST(StringUtils, toUpper)
+{
+  ASSERT_EQ(StringUtils::toUpper('a'), 'A');
+  ASSERT_EQ(StringUtils::toUpper('z'), 'Z');
+  ASSERT_EQ(StringUtils::toUpper('A'), 'A');
+  ASSERT_EQ(StringUtils::toUpper('Z'), 'Z');
+  ASSERT_EQ(StringUtils::toUpper('1'), '1');
+  ASSERT_EQ(StringUtils::toUpper('@'), '@');
+}
+
+TEST(StringUtils, humanToRaw)
+{
+  ASSERT_EQ(StringUtils::humanToRaw("0f00").getData(), std::string({0x0f, 0x00}));
+  ASSERT_EQ(StringUtils::humanToRaw("000f").getData(), std::string({0x00, 0x0f}));
+  ASSERT_EQ(StringUtils::humanToRaw("0a0a").getData(), std::string({0x0a, 0x0a}));
+  ASSERT_EQ(StringUtils::humanToRaw("1a0f").getData(), std::string({0x1a, 0x0f}));
+  ASSERT_EQ(StringUtils::humanToRaw("1a00f").getError(), "Malformed hex data: invalid length");
+  ASSERT_EQ(StringUtils::humanToRaw("1a\n00f").getError(), "Malformed hex data at char 2");
+}
+
 int main(int argc, char* argv[])
 {
     std::cout << "LibNfc version: " << LibNfc::getVersion() << std::endl;

@@ -12,7 +12,7 @@
 class StringUtils
 {
 public:
-    static const char* hex;
+    static const std::string hex;
 
     static std::string rawToHuman(unsigned char c);
     static std::string rawToHuman(char c);
@@ -25,6 +25,12 @@ public:
     static std::string rawToHuman(std::string raw);
 
     static ResultString humanToRaw(std::string human);
+
+    static std::string toLower(std::string str);
+    static char toLower(char c);
+
+    static std::string toUpper(std::string str);
+    static char toUpper(char c);
 };
 
 
