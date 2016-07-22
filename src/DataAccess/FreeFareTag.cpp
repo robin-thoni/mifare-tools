@@ -24,8 +24,9 @@ ResultBool FreeFareTag::authenticate(int sector, int block, std::string key, int
         return ResultBool::error("Failed to connect to MIFARE tag");
     }
 
-//    MifareClassicBlockNumber block = mifare_classic_sector_last_block((MifareClassicBlockNumber)sector);
-    if (mifare_classic_authenticate(_tag, (MifareClassicBlockNumber)block, (const unsigned char*)key.c_str(), (MifareClassicKeyType)keyType) != 0) {
+    block = mifare_classic_sector_first_block((MifareClassicBlockNumber)sector) + block;
+    if (mifare_classic_authenticate(_tag, (MifareClassicBlockNumber)block, (const unsigned char*)key.c_str(),
+                                    (MifareClassicKeyType)keyType) != 0) {
         return ResultBool::error("Failed to authenticate to MIFARE tag");
     }
 
