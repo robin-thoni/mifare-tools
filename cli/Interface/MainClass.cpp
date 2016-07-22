@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <sysexits.h>
+#include <Business/StringUtils.h>
 #include "DBO/Result.h"
 #include "Business/LibNfc.h"
 #include "Business/FreeFareDevice.h"
@@ -60,7 +61,12 @@ int MainClass::main()
     for (size_t i = 0; i < tags.getData().size(); ++i) {
         auto tag = tags.getData()[i];
         std::cout << "UID: " << tag->getUid() << std::endl;
-
+        auto sector = tag->readSector(1, StringUtils::humanToRaw("8829da9daf76").getData(), MFC_KEY_A);
+        if (!sector) {
+            sector.print();
+            return 6;
+        }
+        std::cout << "Sector 1: " << StringUtils::rawToHuman(sector.getData()) << std::endl;
     }
 
     device->close();

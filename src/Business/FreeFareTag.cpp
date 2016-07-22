@@ -2,6 +2,8 @@
 // Created by robin on 6/19/16.
 //
 
+#include <sstream>
+#include <map>
 #include "FreeFareTag.h"
 
 FreeFareTag::FreeFareTag(FreefareTag tag)

@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <Business/LibNfc.h>
 #include <Business/StringUtils.h>
+#include <DBO/AccessBitsDbo.h>
 
 TEST(StringUtils, rawToHumanChar)
 {
@@ -89,6 +90,216 @@ TEST(StringUtils, humanToRaw)
   ASSERT_EQ(StringUtils::humanToRaw("1a0f").getData(), std::string({0x1a, 0x0f}));
   ASSERT_EQ(StringUtils::humanToRaw("1a00f").getError(), "Malformed hex data: invalid length");
   ASSERT_EQ(StringUtils::humanToRaw("1a\n00f").getError(), "Malformed hex data at char 2");
+}
+
+TEST(AccessBitsDbo, getArrayBitimple)
+{
+  const unsigned char buf[] = {0x04};
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 0));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 1));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 2));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 3));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 4));
+  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 5));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 6));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 7));
+}
+
+TEST(AccessBitsDbo, getArrayBitMultiple)
+{
+  const unsigned char buf[] = {0x80, 0x14, 0x01};
+  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 0));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 1));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 2));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 3));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 4));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 5));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 6));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 7));
+
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 8));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 9));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 10));
+  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 11));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 12));
+  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 13));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 14));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 15));
+
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 16));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 17));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 18));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 19));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 20));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 21));
+  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 22));
+  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 23));
+}
+
+TEST(AccessBitsDbo, getBit)
+{
+  const unsigned char buf[4] = {0x05, 0xa3, 0xcf, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.getBit(1, 0));
+  ASSERT_TRUE(dbo.getBit(2, 0));
+  ASSERT_FALSE(dbo.getBit(3, 0));
+
+  ASSERT_TRUE(dbo.getBit(1, 1));
+  ASSERT_TRUE(dbo.getBit(2, 1));
+  ASSERT_FALSE(dbo.getBit(3, 1));
+
+  ASSERT_FALSE(dbo.getBit(1, 2));
+  ASSERT_TRUE(dbo.getBit(2, 2));
+  ASSERT_TRUE(dbo.getBit(3, 2));
+
+  ASSERT_TRUE(dbo.getBit(1, 3));
+  ASSERT_TRUE(dbo.getBit(2, 3));
+  ASSERT_TRUE(dbo.getBit(3, 3));
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisBlock1)
+{
+  const unsigned char buf[4] = {0xff, 0x0f, 0x00, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_TRUE(dbo.canKeyAReadBlock(0));
+  ASSERT_TRUE(dbo.canKeyBReadBlock(0));
+
+  ASSERT_TRUE(dbo.canKeyAWriteBlock(0));
+  ASSERT_TRUE(dbo.canKeyBWriteBlock(0));
+
+  ASSERT_TRUE(dbo.canKeyAIncrementBlock(0));
+  ASSERT_TRUE(dbo.canKeyBIncrementBlock(0));
+
+  ASSERT_TRUE(dbo.canKeyADecrementBlock(0));
+  ASSERT_TRUE(dbo.canKeyBDecrementBlock(0));
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisBlock2)
+{
+  const unsigned char buf[4] = {0xef, 0x0f, 0x01, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_TRUE(dbo.canKeyAReadBlock(0));
+  ASSERT_TRUE(dbo.canKeyBReadBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAWriteBlock(0));
+  ASSERT_FALSE(dbo.canKeyBWriteBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAIncrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBIncrementBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyADecrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBDecrementBlock(0));
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisBlock3)
+{
+  const unsigned char buf[4] = {0xfe, 0x1f, 0x00, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_TRUE(dbo.canKeyAReadBlock(0));
+  ASSERT_TRUE(dbo.canKeyBReadBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAWriteBlock(0));
+  ASSERT_TRUE(dbo.canKeyBWriteBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAIncrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBIncrementBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyADecrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBDecrementBlock(0));
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisBlock4)
+{
+  const unsigned char buf[4] = {0xee, 0x1f, 0x01, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_TRUE(dbo.canKeyAReadBlock(0));
+  ASSERT_TRUE(dbo.canKeyBReadBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAWriteBlock(0));
+  ASSERT_TRUE(dbo.canKeyBWriteBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAIncrementBlock(0));
+  ASSERT_TRUE(dbo.canKeyBIncrementBlock(0));
+
+  ASSERT_TRUE(dbo.canKeyADecrementBlock(0));
+  ASSERT_TRUE(dbo.canKeyBDecrementBlock(0));
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisBlock5)
+{
+  const unsigned char buf[4] = {0xff, 0x0e, 0x10, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_TRUE(dbo.canKeyAReadBlock(0));
+  ASSERT_TRUE(dbo.canKeyBReadBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAWriteBlock(0));
+  ASSERT_FALSE(dbo.canKeyBWriteBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAIncrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBIncrementBlock(0));
+
+  ASSERT_TRUE(dbo.canKeyADecrementBlock(0));
+  ASSERT_TRUE(dbo.canKeyBDecrementBlock(0));
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisBlock6)
+{
+  const unsigned char buf[4] = {0xef, 0x0e, 0x11, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadBlock(0));
+  ASSERT_TRUE(dbo.canKeyBReadBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAWriteBlock(0));
+  ASSERT_TRUE(dbo.canKeyBWriteBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAIncrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBIncrementBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyADecrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBDecrementBlock(0));
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisBlock7)
+{
+  const unsigned char buf[4] = {0xfe, 0x1e, 0x10, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadBlock(0));
+  ASSERT_TRUE(dbo.canKeyBReadBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAWriteBlock(0));
+  ASSERT_FALSE(dbo.canKeyBWriteBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAIncrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBIncrementBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyADecrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBDecrementBlock(0));
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisBlock8)
+{
+  const unsigned char buf[4] = {0xee, 0x1e, 0x11, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadBlock(0));
+  ASSERT_FALSE(dbo.canKeyBReadBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAWriteBlock(0));
+  ASSERT_FALSE(dbo.canKeyBWriteBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyAIncrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBIncrementBlock(0));
+
+  ASSERT_FALSE(dbo.canKeyADecrementBlock(0));
+  ASSERT_FALSE(dbo.canKeyBDecrementBlock(0));
 }
 
 int main(int argc, char* argv[])

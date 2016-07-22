@@ -11,7 +11,7 @@ set(SOURCE_FILES
         Business/FreeFareDevice.h
         Business/FreeFareTag.cpp
         Business/FreeFareTag.h
-        Business/StringUtils.cpp Business/StringUtils.h)
+        Business/StringUtils.cpp Business/StringUtils.h DBO/AccessBitsDbo.cpp DBO/AccessBitsDbo.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${LIBS})
