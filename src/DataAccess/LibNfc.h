@@ -16,21 +16,19 @@ class LibNfc
 {
 public:
     LibNfc();
-    ~LibNfc();
+    virtual ~LibNfc();
 
     ResultBool init();
 
     void clean();
 
-    bool isInitialized();
-
-    Result<std::vector<std::shared_ptr<NfcDevice>>> getDevices();
+    Result<std::vector<std::shared_ptr<NfcDevice>>> getDevices() const;
 
     static std::string getVersion();
 
     nfc_context* getContext() const;
 
-private:
+protected:
     nfc_context* _context;
 };
 

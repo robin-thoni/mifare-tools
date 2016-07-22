@@ -10,11 +10,13 @@ LibNfc::LibNfc()
 {
 }
 
+LibNfc::~LibNfc()
+{
+    clean();
+}
+
 ResultBool LibNfc::init()
 {
-    if (isInitialized()) {
-        return ResultBool::error("LibNfc is already initialized");
-    }
     nfc_init(&_context);
     if (!_context) {
         return ResultBool::error("LibNfc could not be initialized");
@@ -27,33 +29,18 @@ std::string LibNfc::getVersion()
     return nfc_version();
 }
 
-LibNfc::~LibNfc()
-{
-    clean();
-}
-
-bool LibNfc::isInitialized()
-{
-    return _context != 0;
-}
-
 void LibNfc::clean()
 {
-    if (isInitialized()) {
-        nfc_exit(_context);
-        _context = 0;
-    }
+    nfc_exit(_context);
+    _context = 0;
 }
 
-Result<std::vector<std::shared_ptr<NfcDevice>>> LibNfc::getDevices()
+Result<std::vector<std::shared_ptr<NfcDevice>>> LibNfc::getDevices() const
 {
-    if (!isInitialized()) {
-        return Result<std::vector<std::shared_ptr<NfcDevice>>>::error("LibNfc is not initialized");
-    }
     nfc_connstring devices[16];
     size_t count = nfc_list_devices(_context, devices, sizeof(devices));
     if (count < 0) {
-        return Result<std::vector<std::shared_ptr<NfcDevice>>>::error("Failed to list NFC devices");
+        return Result<std::vector<std::shared_ptr<NfcDevice>>>::error("Failed to list NFC devices: " + count);
     }
     std::vector<std::shared_ptr<NfcDevice>> devicesList;
     for (size_t i = 0; i < count; ++i) {

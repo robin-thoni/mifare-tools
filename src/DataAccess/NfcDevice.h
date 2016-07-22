@@ -16,18 +16,14 @@ class LibNfc;
 class NfcDevice
 {
 public:
-    NfcDevice(LibNfc* libNfc, std::string connStr);
+    NfcDevice(const LibNfc* libNfc, const std::string& connStr);
     ~NfcDevice();
 
     ResultBool open();
 
     void close();
 
-    bool isOpened();
-
     const std::string & getConnStr() const;
-
-    void setConnStr(const std::string &connStr);
 
     nfc_device * getDevice() const;
 
@@ -36,7 +32,7 @@ private:
 
     nfc_device* _device;
 
-    LibNfc* _libNfc;
+    const LibNfc* _libNfc;
 };
 
 

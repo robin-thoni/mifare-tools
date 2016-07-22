@@ -28,7 +28,7 @@ AccessBitsDbo::AccessBitsDbo(const std::string &bits)
 {
 }
 
-const char AccessBitsDbo::getUserData() const
+char AccessBitsDbo::getUserData() const
 {
     return _bits[_bits.length() - 1];
 }
@@ -68,25 +68,25 @@ void AccessBitsDbo::setArrayBit(unsigned char *buf, const char &bitPosition, con
     setArrayBit((char*)buf, bitPosition, value);
 }
 
-const bool AccessBitsDbo::getBit(const char &i, const char &j) const
+bool AccessBitsDbo::getBit(const char &i, const char &j) const
 {
     const char* buf = _bits.c_str();
     return getArrayBit(buf, nonInvertedBitPosition[i][j]) && !getArrayBit(buf, invertedBitPosition[i][j]);
 }
 
-const bool AccessBitsDbo::getArrayBit(const char *buf, const char &bitPosition)
+bool AccessBitsDbo::getArrayBit(const char *buf, const char &bitPosition)
 {
     char byteOffset = (char)(bitPosition / 8);
     char bitOffset = (char)(7 - (bitPosition % 8));
     return (buf[byteOffset] >> bitOffset) & 1 == 1;
 }
 
-const bool AccessBitsDbo::getArrayBit(const unsigned char *buf, const char &bitPosition)
+bool AccessBitsDbo::getArrayBit(const unsigned char *buf, const char &bitPosition)
 {
     return getArrayBit((const char *)buf, bitPosition);
 }
 
-const bool AccessBitsDbo::canKeyAReadBlock(const char &block) const
+bool AccessBitsDbo::canKeyAReadBlock(const char &block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -94,7 +94,7 @@ const bool AccessBitsDbo::canKeyAReadBlock(const char &block) const
     return !c3 || (!c1 && !c2 && c3);
 }
 
-const bool AccessBitsDbo::canKeyBReadBlock(const char &block) const
+bool AccessBitsDbo::canKeyBReadBlock(const char &block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -102,7 +102,7 @@ const bool AccessBitsDbo::canKeyBReadBlock(const char &block) const
     return !c1 || !c2 || !c3;
 }
 
-const bool AccessBitsDbo::canKeyAWriteBlock(const char &block) const
+bool AccessBitsDbo::canKeyAWriteBlock(const char &block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -110,7 +110,7 @@ const bool AccessBitsDbo::canKeyAWriteBlock(const char &block) const
     return !c1 && !c2 && !c3;
 }
 
-const bool AccessBitsDbo::canKeyBWriteBlock(const char &block) const
+bool AccessBitsDbo::canKeyBWriteBlock(const char &block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -118,7 +118,7 @@ const bool AccessBitsDbo::canKeyBWriteBlock(const char &block) const
     return (!c2 && !c3) || (c1 && !c3) || (!c1 && c2 && c3);
 }
 
-const bool AccessBitsDbo::canKeyAIncrementBlock(const char &block) const
+bool AccessBitsDbo::canKeyAIncrementBlock(const char &block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -126,7 +126,7 @@ const bool AccessBitsDbo::canKeyAIncrementBlock(const char &block) const
     return !c1 && !c2 && !c3;
 }
 
-const bool AccessBitsDbo::canKeyBIncrementBlock(const char &block) const
+bool AccessBitsDbo::canKeyBIncrementBlock(const char &block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -134,7 +134,7 @@ const bool AccessBitsDbo::canKeyBIncrementBlock(const char &block) const
     return (!c1 && !c2 && !c3) || (c1 && c2 && !c3);
 }
 
-const bool AccessBitsDbo::canKeyADecrementBlock(const char &block) const
+bool AccessBitsDbo::canKeyADecrementBlock(const char &block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -142,7 +142,7 @@ const bool AccessBitsDbo::canKeyADecrementBlock(const char &block) const
     return (!c1 && !c2) || (c1 && c2 && !c3);
 }
 
-const bool AccessBitsDbo::canKeyBDecrementBlock(const char &block) const
+bool AccessBitsDbo::canKeyBDecrementBlock(const char &block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -150,17 +150,17 @@ const bool AccessBitsDbo::canKeyBDecrementBlock(const char &block) const
     return (!c1 && !c2) || (c1 && c2 && !c3);
 }
 
-const bool AccessBitsDbo::canKeyAReadKeyATrailer() const
+bool AccessBitsDbo::canKeyAReadKeyATrailer() const
 {
     return false;
 }
 
-const bool AccessBitsDbo::canKeyBReadKeyATrailer() const
+bool AccessBitsDbo::canKeyBReadKeyATrailer() const
 {
     return false;
 }
 
-const bool AccessBitsDbo::canKeyAWriteKeyATrailer() const
+bool AccessBitsDbo::canKeyAWriteKeyATrailer() const
 {
     bool c1 = getBit(1, 3);
     bool c2 = getBit(2, 3);
@@ -168,7 +168,7 @@ const bool AccessBitsDbo::canKeyAWriteKeyATrailer() const
     return !c1 && !c2;
 }
 
-const bool AccessBitsDbo::canKeyBWriteKeyATrailer() const
+bool AccessBitsDbo::canKeyBWriteKeyATrailer() const
 {
     bool c1 = getBit(1, 3);
     bool c2 = getBit(2, 3);
@@ -176,12 +176,12 @@ const bool AccessBitsDbo::canKeyBWriteKeyATrailer() const
     return (!c1 && c2 && c3) || (c1 && !c2 && !c3);
 }
 
-const bool AccessBitsDbo::canKeyAReadAccessBitsTrailer() const
+bool AccessBitsDbo::canKeyAReadAccessBitsTrailer() const
 {
     return true;
 }
 
-const bool AccessBitsDbo::canKeyBReadAccessBitsTrailer() const
+bool AccessBitsDbo::canKeyBReadAccessBitsTrailer() const
 {
     bool c1 = getBit(1, 3);
     bool c2 = getBit(2, 3);
@@ -189,7 +189,7 @@ const bool AccessBitsDbo::canKeyBReadAccessBitsTrailer() const
     return c1 || (c2 && c3);
 }
 
-const bool AccessBitsDbo::canKeyAWriteAccessBitsTrailer() const
+bool AccessBitsDbo::canKeyAWriteAccessBitsTrailer() const
 {
     bool c1 = getBit(1, 3);
     bool c2 = getBit(2, 3);
@@ -197,7 +197,7 @@ const bool AccessBitsDbo::canKeyAWriteAccessBitsTrailer() const
     return !c1 && !c2 && c3;
 }
 
-const bool AccessBitsDbo::canKeyBWriteAccessBitsTrailer() const
+bool AccessBitsDbo::canKeyBWriteAccessBitsTrailer() const
 {
     bool c1 = getBit(1, 3);
     bool c2 = getBit(2, 3);
@@ -205,7 +205,7 @@ const bool AccessBitsDbo::canKeyBWriteAccessBitsTrailer() const
     return (!c1 && c2 && c3) || (c1 && !c2 && c3);
 }
 
-const bool AccessBitsDbo::canKeyAReadKeyBTrailer() const
+bool AccessBitsDbo::canKeyAReadKeyBTrailer() const
 {
     bool c1 = getBit(1, 3);
     bool c2 = getBit(2, 3);
@@ -213,12 +213,12 @@ const bool AccessBitsDbo::canKeyAReadKeyBTrailer() const
     return (!c1 && !c2) || (!c1 && !c3);
 }
 
-const bool AccessBitsDbo::canKeyBReadKeyBTrailer() const
+bool AccessBitsDbo::canKeyBReadKeyBTrailer() const
 {
     return false;
 }
 
-const bool AccessBitsDbo::canKeyAWriteKeyBTrailer() const
+bool AccessBitsDbo::canKeyAWriteKeyBTrailer() const
 {
     bool c1 = getBit(1, 3);
     bool c2 = getBit(2, 3);
@@ -226,7 +226,7 @@ const bool AccessBitsDbo::canKeyAWriteKeyBTrailer() const
     return !c1 && !c2;
 }
 
-const bool AccessBitsDbo::canKeyBWriteKeyBTrailer() const
+bool AccessBitsDbo::canKeyBWriteKeyBTrailer() const
 {
     bool c1 = getBit(1, 3);
     bool c2 = getBit(2, 3);

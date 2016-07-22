@@ -11,9 +11,6 @@ FreeFareDevice::FreeFareDevice(std::shared_ptr<NfcDevice> device)
 
 Result<std::vector<std::shared_ptr<FreeFareTag>>> FreeFareDevice::getTags()
 {
-    if (!_device->isOpened()) {
-        return Result<std::vector<std::shared_ptr<FreeFareTag>>>::error("Device is not opened");
-    }
     FreefareTag* tags = freefare_get_tags(_device->getDevice());
     if (!tags) {
         return Result<std::vector<std::shared_ptr<FreeFareTag>>>::error("Failed to get MIFARE tags");

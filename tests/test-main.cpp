@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string.h>
 #include <gtest/gtest.h>
-#include <Business/LibNfc.h>
-#include <Business/StringUtils.h>
+#include <DataAccess/LibNfc.h>
+#include <DBO/StringUtils.h>
 #include <DBO/AccessBitsDbo.h>
 
 TEST(StringUtils, rawToHumanChar)

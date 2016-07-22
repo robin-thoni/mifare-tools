@@ -4,7 +4,7 @@
 
 #include "NfcDevice.h"
 
-NfcDevice::NfcDevice(LibNfc* libNfc, std::string str)
+NfcDevice::NfcDevice(const LibNfc* libNfc, const std::string& str)
     : _connStr(str)
     , _device(0)
     , _libNfc(libNfc)
@@ -18,9 +18,6 @@ NfcDevice::~NfcDevice()
 
 ResultBool NfcDevice::open()
 {
-    if (isOpened()) {
-        return ResultBool::error("NFC device is already opened");
-    }
     _device = nfc_open(_libNfc->getContext(), _connStr.c_str());
     if (!_device) {
         return ResultBool::error("Failed to open NFC device");
@@ -28,27 +25,15 @@ ResultBool NfcDevice::open()
     return ResultBool::ok(true);
 }
 
-bool NfcDevice::isOpened()
-{
-    return _device != 0;
-}
-
 void NfcDevice::close()
 {
-    if (isOpened()) {
-        nfc_close(_device);
-        _device = 0;
-    }
+    nfc_close(_device);
+    _device = 0;
 }
 
 nfc_device *NfcDevice::getDevice() const
 {
     return _device;
-}
-
-void NfcDevice::setConnStr(const std::string &connStr)
-{
-    _connStr = connStr;
 }
 
 const std::string &NfcDevice::getConnStr() const
