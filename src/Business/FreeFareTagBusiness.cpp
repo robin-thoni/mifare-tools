@@ -22,7 +22,8 @@ ResultString FreeFareTagBusiness::readBlock(int sector, int block, std::string k
 ResultString FreeFareTagBusiness::readSector(int sector, std::string key, int keyType)
 {
     std::string res;
-    for (int i = 0; i < 4; ++i) {
+    int lastBlock = _tag->getSectorBlockCount(sector);
+    for (int i = 0; i < lastBlock; ++i) {
         auto data = readBlock(sector, i, key, keyType);
         if (data) {
             res += data.getData();
@@ -37,6 +38,11 @@ ResultString FreeFareTagBusiness::readSector(int sector, std::string key, int ke
 const std::string &FreeFareTagBusiness::getUid() const
 {
     return _tag->getUid();
+}
+
+freefare_tag_type FreeFareTagBusiness::getType() const
+{
+    return _tag->getType();
 }
 
 std::shared_ptr<FreeFareTag> FreeFareTagBusiness::getTag() const

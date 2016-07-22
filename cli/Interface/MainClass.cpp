@@ -63,12 +63,19 @@ int MainClass::main()
     for (size_t i = 0; i < tags.getData().size(); ++i) {
         auto tag = tags.getData()[i];
         std::cout << "UID: " << tag->getUid() << std::endl;
-        auto sector = tag->readSector(1, StringUtils::humanToRaw("8829da9daf76").getData(), MFC_KEY_A);
-        if (!sector) {
-            sector.print();
-            return 6;
+        std::cout << "Type: " << tag->getType() << std::endl;
+        for(int i = 0; i < 16; ++i) {
+            std::cout << "+Sector: " << i << std::endl;
+            for (int j = 0; j < 4; ++j) {
+                auto sector = tag->readBlock(i, j, StringUtils::humanToRaw("8829da9daf76").getData(), MFC_KEY_A);
+                if (!sector) {
+                    sector.print();
+                }
+                else {
+                    std::cout << StringUtils::rawToHuman(sector.getData()) << std::endl;
+                }
+            }
         }
-        std::cout << "Sector 1: " << StringUtils::rawToHuman(sector.getData()) << std::endl;
     }
 
     device->close();

@@ -20,6 +20,12 @@ public:
 
     ResultString readBlock(int sector, int block, std::string key, int keyType);
 
+    int getFirstBlock(int sector) const;
+
+    int getLastBlock(int sector) const;
+
+    int getSectorBlockCount(int sector);
+
     const freefare_tag * getTag() const;
 
     freefare_tag_type getType() const;

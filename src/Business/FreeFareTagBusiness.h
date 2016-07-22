@@ -22,6 +22,8 @@ public:
 
     const std::string & getUid() const;
 
+    freefare_tag_type getType() const;
+
     std::shared_ptr<FreeFareTag> getTag() const;
 
 protected:
