@@ -302,6 +302,198 @@ TEST(AccessBitsDbo, canKeyDoThisOnThisBlock8)
   ASSERT_FALSE(dbo.canKeyBDecrementBlock(0));
 }
 
+TEST(AccessBitsDbo, canKeyDoThisOnThisTrailer1)
+{
+  const unsigned char buf[4] = {0xff, 0x0f, 0x00, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAWriteKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadAccessBitsTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteAccessBitsTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteAccessBitsTrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyBTrailer());
+
+  ASSERT_TRUE(dbo.canKeyAWriteKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyBTrailer());
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisTrailer2)
+{
+  const unsigned char buf[4] = {0x7f, 0x0f, 0x08, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyATrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadAccessBitsTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteAccessBitsTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteAccessBitsTrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyBTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyBTrailer());
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisTrailer3)
+{
+  const unsigned char buf[4] = {0xf7, 0x8f, 0x00, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyATrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyATrailer());
+  ASSERT_TRUE(dbo.canKeyBWriteKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadAccessBitsTrailer());
+  ASSERT_TRUE(dbo.canKeyBReadAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteAccessBitsTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyBTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyBTrailer());
+  ASSERT_TRUE(dbo.canKeyBWriteKeyBTrailer());
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisTrailer4)
+{
+  const unsigned char buf[4] = {0x77, 0x8f, 0x08, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyATrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadAccessBitsTrailer());
+  ASSERT_TRUE(dbo.canKeyBReadAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteAccessBitsTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyBTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyBTrailer());
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisTrailer5)
+{
+  const unsigned char buf[4] = {0xff, 0x07, 0x80, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAWriteKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadAccessBitsTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadAccessBitsTrailer());
+
+  ASSERT_TRUE(dbo.canKeyAWriteAccessBitsTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteAccessBitsTrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyBTrailer());
+
+  ASSERT_TRUE(dbo.canKeyAWriteKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyBTrailer());
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisTrailer6)
+{
+  const unsigned char buf[4] = {0x7f, 0x07, 0x88, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyATrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyATrailer());
+  ASSERT_TRUE(dbo.canKeyBWriteKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadAccessBitsTrailer());
+  ASSERT_TRUE(dbo.canKeyBReadAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteAccessBitsTrailer());
+  ASSERT_TRUE(dbo.canKeyBWriteAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyBTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyBTrailer());
+  ASSERT_TRUE(dbo.canKeyBWriteKeyBTrailer());
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisTrailer7)
+{
+  const unsigned char buf[4] = {0xf7, 0x87, 0x80, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyATrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadAccessBitsTrailer());
+  ASSERT_TRUE(dbo.canKeyBReadAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteAccessBitsTrailer());
+  ASSERT_TRUE(dbo.canKeyBWriteAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyBTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyBTrailer());
+}
+
+TEST(AccessBitsDbo, canKeyDoThisOnThisTrailer8)
+{
+  const unsigned char buf[4] = {0x77, 0x87, 0x88, 0x00};
+  AccessBitsDbo dbo((const char*)buf);
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyATrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyATrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyATrailer());
+
+  ASSERT_TRUE(dbo.canKeyAReadAccessBitsTrailer());
+  ASSERT_TRUE(dbo.canKeyBReadAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteAccessBitsTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteAccessBitsTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAReadKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBReadKeyBTrailer());
+
+  ASSERT_FALSE(dbo.canKeyAWriteKeyBTrailer());
+  ASSERT_FALSE(dbo.canKeyBWriteKeyBTrailer());
+}
+
 int main(int argc, char* argv[])
 {
     std::cout << "LibNfc version: " << LibNfc::getVersion() << std::endl;
