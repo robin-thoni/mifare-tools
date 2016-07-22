@@ -8,6 +8,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <DataAccess/FreeFareTag.h>
+#include <DataAccess/SectorDbo.h>
 
 class FreeFareTagBusiness
 {
@@ -18,7 +19,7 @@ public:
 
     ResultString readBlock(int sector, int block, std::string key, int keyType);
 
-    ResultString readSector(int sector, std::string key, int keyType);
+    Result<SectorDbo> readSector(int sector, std::string key, int keyType);
 
     const std::string & getUid() const;
 

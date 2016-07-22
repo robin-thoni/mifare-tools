@@ -64,16 +64,20 @@ int MainClass::main()
         auto tag = tags.getData()[i];
         std::cout << "UID: " << tag->getUid() << std::endl;
         std::cout << "Type: " << tag->getType() << std::endl;
-        for(int i = 0; i < 16; ++i) {
-            std::cout << "+Sector: " << i << std::endl;
-            for (int j = 0; j < 4; ++j) {
-                auto sector = tag->readBlock(i, j, StringUtils::humanToRaw("8829da9daf76").getData(), MFC_KEY_A);
-                if (!sector) {
-                    sector.print();
+        for(int s = 0; s < 16; ++s) {
+            std::cout << "+Sector: " << s << std::endl;
+            auto sectorResult = tag->readSector(s,  StringUtils::humanToRaw("8829da9daf76").getData(), MFC_KEY_A);
+            if (!sectorResult) {
+                sectorResult.print();
+            }
+            else {
+                auto sector = sectorResult.getData();
+                for (int b = 0; b < 3; ++b) {
+                    std::cout << StringUtils::rawToHuman(sector.getBlock(b)) << std::endl;
                 }
-                else {
-                    std::cout << StringUtils::rawToHuman(sector.getData()) << std::endl;
-                }
+                std::cout << StringUtils::rawToHuman(sector.getKeyA()) << " "
+                << StringUtils::rawToHuman(sector.getAccessBits()) << " "
+                << StringUtils::rawToHuman(sector.getKeyB()) << std::endl;
             }
         }
     }

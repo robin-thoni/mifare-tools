@@ -19,7 +19,7 @@ ResultString FreeFareTagBusiness::readBlock(int sector, int block, std::string k
     return _tag->readBlock(sector, block, key, keyType);
 }
 
-ResultString FreeFareTagBusiness::readSector(int sector, std::string key, int keyType)
+Result<SectorDbo> FreeFareTagBusiness::readSector(int sector, std::string key, int keyType)
 {
     std::string res;
     int lastBlock = _tag->getSectorBlockCount(sector);
@@ -29,10 +29,10 @@ ResultString FreeFareTagBusiness::readSector(int sector, std::string key, int ke
             res += data.getData();
         }
         else {
-            return data;
+            return Result<SectorDbo>::error(data);
         }
     }
-    return ResultString::ok(res);
+    return SectorDbo::parse(res);
 }
 
 const std::string &FreeFareTagBusiness::getUid() const
