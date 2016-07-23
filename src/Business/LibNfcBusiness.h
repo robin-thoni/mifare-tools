@@ -26,7 +26,9 @@ public:
 
     std::shared_ptr<LibNfc> getLibNfc() const;
 
-    static std::string getVersion();
+    static std::string getLibNfcVersion();
+
+    static std::string getMifareToolsVersion();
 
 protected:
     std::shared_ptr<LibNfc> _libNfc;

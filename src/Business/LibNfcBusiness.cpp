@@ -5,6 +5,17 @@
 #include <algorithm>
 #include "LibNfcBusiness.h"
 
+#define Q(x) #x
+#define QUOTE(x) Q(x)
+
+#ifndef GIT_SHA1
+#define GIT_SHA1 "unknown"
+#endif
+
+#ifndef GIT_REF_NAME
+#define GIT_REF_NAME "unknown"
+#endif
+
 LibNfcBusiness::LibNfcBusiness()
 {
     _libNfc = std::make_shared<LibNfc>();
@@ -23,7 +34,7 @@ ResultBool LibNfcBusiness::init()
     return _libNfc->init();
 }
 
-std::string LibNfcBusiness::getVersion()
+std::string LibNfcBusiness::getLibNfcVersion()
 {
     return LibNfc::getVersion();
 }
@@ -60,4 +71,9 @@ Result<std::vector<std::shared_ptr<NfcDeviceBusiness>>> LibNfcBusiness::getDevic
 std::shared_ptr<LibNfc> LibNfcBusiness::getLibNfc() const
 {
     return _libNfc;
+}
+
+std::string LibNfcBusiness::getMifareToolsVersion()
+{
+    return QUOTE(GIT_REF_NAME)  "-"  QUOTE(GIT_SHA1);
 }

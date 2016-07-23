@@ -19,17 +19,6 @@ MainClass::MainClass(int argc, char *argv[])
 {
 }
 
-#define Q(x) #x
-#define QUOTE(x) Q(x)
-
-#ifndef GIT_SHA1
-#define GIT_SHA1 "unknown"
-#endif
-
-#ifndef GIT_REF_NAME
-#define GIT_REF_NAME "unknown"
-#endif
-
 int MainClass::main()
 {
     CommandLineParser parser(_argc, _argv);
@@ -233,8 +222,8 @@ void MainClass::printPercentDump(int done, int total)
 
 void MainClass::printVersion() const
 {
-    std::cout << "LibNfc version: " << LibNfcBusiness::getVersion() << std::endl;
-    std::cout << "Mifare-tools version: " << QUOTE(GIT_REF_NAME) << "-" << QUOTE(GIT_SHA1) << std::endl;
+    std::cout << "LibNfc version: " << LibNfcBusiness::getLibNfcVersion() << std::endl;
+    std::cout << "Mifare-tools version: " << LibNfcBusiness::getMifareToolsVersion() << std::endl;
 }
 
 std::shared_ptr<NfcDeviceBusiness> MainClass::getDevice(const std::string &deviceName, std::vector<std::shared_ptr<NfcDeviceBusiness>> devices)
