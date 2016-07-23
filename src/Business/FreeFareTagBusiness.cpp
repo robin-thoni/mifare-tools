@@ -49,3 +49,29 @@ std::shared_ptr<FreeFareTag> FreeFareTagBusiness::getTag() const
 {
     return _tag;
 }
+
+Result<std::vector<std::vector<std::pair<std::string, std::string>>>> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys)
+{
+    std::vector<std::vector<std::pair<std::string, std::string>>> mappedKeys;
+
+    for (int i = 0; i < 16; ++i) {
+        std::vector<std::pair<std::string, std::string>> sectorKeys;
+        for (int j = 0; j < 4; ++j) {
+            std::pair<std::string, std::string> blockKeys;
+            for (auto key : keys) {
+                auto res = authenticate(i, j, key, MFC_KEY_A);
+                if (res) {
+                    blockKeys.first = key;
+                }
+                res = authenticate(i, j, key, MFC_KEY_B);
+                if (res) {
+                    blockKeys.second = key;
+                }
+            }
+            sectorKeys.push_back(blockKeys);
+        }
+        mappedKeys.push_back(sectorKeys);
+    }
+
+    return Result<std::vector<std::vector<std::pair<std::string, std::string>>>>::ok(mappedKeys);
+}

@@ -1,5 +1,5 @@
 include_directories(.)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ggdb -g3")
 include_directories(. ../src)
 set(SOURCE_FILES
         main.cpp

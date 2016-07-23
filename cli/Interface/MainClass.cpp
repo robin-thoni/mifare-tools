@@ -8,7 +8,6 @@
 #include <Business/FreeFareDeviceBusiness.h>
 #include "DBO/Result.h"
 #include "Business/LibNfcBusiness.h"
-#include "Business/FreeFareDeviceBusiness.h"
 #include "CommandLineParser.h"
 #include "MainClass.h"
 
@@ -64,27 +63,62 @@ int MainClass::main()
         auto tag = tags.getData()[i];
         std::cout << "UID: " << tag->getUid() << std::endl;
         std::cout << "Type: " << tag->getType() << std::endl;
-        for(int s = 0; s < 16; ++s) {
-            std::cout << "+Sector: " << s << std::endl;
-            auto sectorResult = tag->readSector(s,  StringUtils::humanToRaw("8829da9daf76").getData(), MFC_KEY_A);
-            if (!sectorResult) {
-                sectorResult.print();
-            }
-            else {
-                auto sector = sectorResult.getData();
-                for (int b = 0; b < 3; ++b) {
-                    std::cout << StringUtils::rawToHuman(sector.getBlock(b)) << std::endl;
-                }
-                std::cout << StringUtils::rawToHuman(sector.getKeyA()) << " "
-                << StringUtils::rawToHuman(sector.getAccessBits()) << " "
-                << StringUtils::rawToHuman(sector.getKeyB()) << std::endl;
-            }
-        }
+        mapKeys(tag);
     }
 
     device->close();
-
     libNfc.clean();
 
     return 0;
 }
+
+int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag)
+{
+    std::vector<std::string> keys;
+    keys.push_back(StringUtils::humanToRaw("8829da9daf76").getData());
+    auto mappedKeysResult = tag->mapKeys(keys);
+    if (!mappedKeysResult) {
+        mappedKeysResult.print();
+    }
+    else {
+        auto mappedKeys = mappedKeysResult.getData();
+        for (int s = 0; s < mappedKeys.size(); ++s) {
+            auto sectorKeys = mappedKeys[s];
+            std::cout << "+Sector: " << s << std::endl;
+            for (int b = 0; b < sectorKeys.size(); ++b) {
+                auto blockKeys = sectorKeys[b];
+                std::cout << "+Block: " << b << std::endl;
+                std::cout << "Key A: " << StringUtils::rawToHuman(blockKeys.first) << std::endl;
+                std::cout << "Key B: " << StringUtils::rawToHuman(blockKeys.second) << std::endl;
+            }
+        }
+    }
+    return 0;
+}
+
+int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag)
+{
+    for(int s = 0; s < 16; ++s)
+    {
+        std::cout << "+Sector: " << s << std::endl;
+        auto sectorResult = tag->readSector(s, StringUtils::humanToRaw("8829da9daf76").getData(), MFC_KEY_A);
+        if (!sectorResult)
+        {
+            sectorResult.print();
+        }
+        else
+        {
+            auto sector = sectorResult.getData();
+            for (int b = 0; b < 3; ++b)
+            {
+                std::cout << StringUtils::rawToHuman(sector.getBlock(b)) << std::endl;
+            }
+            std::cout << StringUtils::rawToHuman(sector.getKeyA()) << " "
+            << StringUtils::rawToHuman(sector.getAccessBits()) << " "
+            << StringUtils::rawToHuman(sector.getKeyB()) << std::endl;
+        }
+    }
+    return 0;
+}
+
+

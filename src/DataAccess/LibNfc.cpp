@@ -38,7 +38,7 @@ void LibNfc::clean()
 Result<std::vector<std::shared_ptr<NfcDevice>>> LibNfc::getDevices() const
 {
     nfc_connstring devices[16];
-    size_t count = nfc_list_devices(_context, devices, sizeof(devices));
+    size_t count = nfc_list_devices(_context, devices, 16);
     if (count < 0) {
         return Result<std::vector<std::shared_ptr<NfcDevice>>>::error("Failed to list NFC devices: " + count);
     }

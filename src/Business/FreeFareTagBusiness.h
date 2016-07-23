@@ -21,7 +21,9 @@ public:
 
     Result<SectorDbo> readSector(int sector, std::string key, int keyType);
 
-    const std::string & getUid() const;
+    Result<std::vector<std::vector<std::pair<std::string, std::string>>>> mapKeys(std::vector<std::string> keys);
+
+    const std::string& getUid() const;
 
     freefare_tag_type getType() const;
 
