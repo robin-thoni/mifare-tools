@@ -50,7 +50,7 @@ std::shared_ptr<FreeFareTag> FreeFareTagBusiness::getTag() const
     return _tag;
 }
 
-Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys)
+Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys, std::function<void(int, int)> cb)
 {
     std::vector<std::vector<std::pair<std::string, std::string>>> mappedKeys;
 
@@ -58,12 +58,16 @@ Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys)
         std::vector<std::pair<std::string, std::string>> sectorKeys;
         for (int j = 0; j < 4; ++j) {
             std::pair<std::string, std::string> blockKeys;
-            for (auto key : keys) {
+            for (int k = 0; k < keys.size(); ++k) {
+                auto key = keys[k];
                 if (authenticate(i, j, key, MFC_KEY_A)) {
                     blockKeys.first = key;
                 }
                 if (authenticate(i, j, key, MFC_KEY_B)) {
                     blockKeys.second = key;
+                }
+                if (cb != 0) {
+                    cb((i * 4 * keys.size()) + (j * keys.size()) + k + 1, 16 * 4 * keys.size());
                 }
                 if (!blockKeys.first.empty() && !blockKeys.second.empty()) {
                     break;
@@ -77,7 +81,7 @@ Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys)
     return Result<std::vector<std::vector<std::pair<std::string, std::string>>>>::ok(mappedKeys);
 }
 
-Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys)
+Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::function<void(int, int)> cb)
 {
     if (keys.size() != 16) {
         return Result<std::vector<SectorDbo>>::error("Must have 16 sectors");
@@ -112,6 +116,9 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys)
                 }
             }
             sector.setBlock(b, data);
+            if (cb != 0) {
+                cb((s * sectorKeys.size()) + b + 1, keys.size() * sectorKeys.size());
+            }
         }
         int b = sectorKeys.size() - 1;
         auto blockKey = sectorKeys[b];
@@ -132,6 +139,9 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys)
         }
         sector.setBlock(b, data);
         AccessBitsDbo accessBitsDbo = sector.getAccessBitsDbo();
+        if (cb != 0) {
+            cb((s * sectorKeys.size()) + b + 1, keys.size() * sectorKeys.size());
+        }
 
         sector.setKeyA(keyA ? blockKey.first : "");
         sector.setKeyB(keyB ? blockKey.second : "");
@@ -150,11 +160,11 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys)
     return Result<std::vector<SectorDbo>>::ok(sectors);
 }
 
-Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(std::vector<std::string> keys)
+Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(std::vector<std::string> keys, std::function<void(int, int)> mapCb, std::function<void(int, int)> dumpCb)
 {
-    auto mappedKeysResult = mapKeys(keys);
+    auto mappedKeysResult = mapKeys(keys, mapCb);
     if (!mappedKeysResult) {
         return Result<std::vector<SectorDbo>>::error(mappedKeysResult);
     }
-    return dump(mappedKeysResult.getData());
+    return dump(mappedKeysResult.getData(), dumpCb);
 }

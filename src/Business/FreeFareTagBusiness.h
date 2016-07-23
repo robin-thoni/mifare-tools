@@ -23,11 +23,11 @@ public:
 
     Result<SectorDbo> readSector(int sector, std::string key, int keyType);
 
-    Result<MappedKeys> mapKeys(std::vector<std::string> keys);
+    Result<MappedKeys> mapKeys(std::vector<std::string> keys, std::function<void(int, int)> cb = 0);
 
-    Result<std::vector<SectorDbo>> dump(MappedKeys keys);
+    Result<std::vector<SectorDbo>> dump(MappedKeys keys, std::function<void(int, int)> cb  = 0);
 
-    Result<std::vector<SectorDbo>> dump(std::vector<std::string> keys);
+    Result<std::vector<SectorDbo>> dump(std::vector<std::string> keys, std::function<void(int, int)> mapCb = 0, std::function<void(int, int)> dumpCb = 0);
 
     const std::string& getUid() const;
 

@@ -6,6 +6,7 @@
 #include <sysexits.h>
 #include <DBO/StringUtils.h>
 #include <Business/FreeFareDeviceBusiness.h>
+#include <iomanip>
 #include "DBO/Result.h"
 #include "Business/LibNfcBusiness.h"
 #include "CommandLineParser.h"
@@ -80,7 +81,8 @@ int MainClass::main()
 //    keys.push_back(StringUtils::humanToRaw("ffffffffffff").getData());
     keys.push_back(StringUtils::humanToRaw("484558414354").getData());
 
-    int res = dump(tag, keys); //mapKeys(tag);
+    int res = dump(tag, keys);
+//    int res = mapKeys(tag, keys);
 
     device->close();
     libNfc.clean();
@@ -90,7 +92,8 @@ int MainClass::main()
 
 int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
-    auto mappedKeysResult = tag->mapKeys(keys);
+    auto mappedKeysResult = tag->mapKeys(keys, printPercent);
+    std::cout << "\r";
     if (!mappedKeysResult) {
         mappedKeysResult.print();
     }
@@ -112,7 +115,8 @@ int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std
 
 int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
-    auto dumpResult = tag->dump(keys);
+    auto dumpResult = tag->dump(keys, printPercent, printPercent);
+    std::cout << "\r";
     if (!dumpResult) {
         dumpResult.print();
         return 7;
@@ -156,4 +160,9 @@ void MainClass::printTrailerAccessBits(const AccessBitsDbo &accessBits)
 
     std::cout << " key B read: " << (accessBits.canKeyAReadKeyBTrailer() ? "A" : "") << (accessBits.canKeyBReadKeyBTrailer() ? "B" : "");
     std::cout << " key B write: " << (accessBits.canKeyAWriteKeyBTrailer() ? "A" : "") << (accessBits.canKeyBWriteKeyBTrailer() ? "B" : "") << std::endl;;
+}
+
+void MainClass::printPercent(int done, int total)
+{
+    std::cout << "\r" << std::fixed << std::setprecision(1) <<  ((float)done / (float)total * 100.0) << "%" << std::flush;
 }

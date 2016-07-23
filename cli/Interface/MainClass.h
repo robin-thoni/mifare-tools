@@ -22,6 +22,8 @@ public:
 
     void printTrailerAccessBits(const AccessBitsDbo& accessBits);
 
+    static void printPercent(int done, int total);
+
 private:
     int _argc;
 
