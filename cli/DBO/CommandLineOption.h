@@ -7,12 +7,16 @@
 
 # include <string>
 # include <vector>
+#include <Interface/CommandLineParser.h>
+
+class CommandLineParser;
 
 class CommandLineOption
 {
 public:
-    CommandLineOption(const std::string& longName, char shortName, const std::string& description,
-                      const std::string& valueName = "", const std::string& defaultValue = "");
+    CommandLineOption(CommandLineParser* parser, const std::string& longName, char shortName,
+                      const std::string& description, const std::string& valueName = "",
+                      const std::string& defaultValue = "");
 
     const std::string &getLongName() const;
 

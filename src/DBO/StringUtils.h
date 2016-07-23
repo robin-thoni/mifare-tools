@@ -33,6 +33,11 @@ public:
     static char toUpper(char c);
 
     static std::string ensureSize(const std::string& data, int size);
+
+    static std::string ltrim(const std::string& s);
+    static std::string rtrim(const std::string& s);
+    static std::string trim(const std::string& s);
+    static std::string removeSpaces(const std::string& s);
 };
 
 

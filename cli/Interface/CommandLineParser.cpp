@@ -60,15 +60,39 @@ void CommandLineParser::addOption(CommandLineOption* opt)
 int CommandLineParser::showHelp(int status, bool stdErr)
 {
     auto& out = stdErr ? std::cerr : std::cout;
+    int longestName = 0;
+    int longestValue = 0;
+    for (auto opt : _options) {
+        if (opt->getLongName().length() > longestName) {
+            longestName = opt->getLongName().length();
+        }
+        std::string value = "<" + opt->getValueName();
+        if (!opt->getDefaultValue().empty()) {
+            value += opt->getDefaultValue();
+        }
+        value += ">";
+        if (value.length() > longestValue) {
+            longestValue = value.length();
+        }
+    }
     out << "Options:" << std::endl;
     for (auto opt : _options)
     {
         out << "  -" << opt->getShortName() << ", --" << opt->getLongName();
+        out << std::string(longestName - opt->getLongName().length() + 2, ' ');
         if (opt->hasValue())
         {
-            out << " <" << opt->getValueName() << "=" << opt->getDefaultValue() << ">";
+            std::string value = "<" + opt->getValueName();
+            if (!opt->getDefaultValue().empty()) {
+                value += opt->getDefaultValue();
+            }
+            value += ">";
+            out << value << std::string(longestValue - value.length() + 2, ' ');
         }
-        out << " " << opt->getDescription() << std::endl;
+        else {
+            out << std::string(longestValue + 2, ' ');
+        }
+        out << opt->getDescription() << std::endl;
     }
     return status;
 }

@@ -2,6 +2,7 @@
 // Created by robin on 6/20/16.
 //
 
+#include <algorithm>
 #include "StringUtils.h"
 
 const std::string StringUtils::hex = "0123456789abcdef";
@@ -122,4 +123,30 @@ std::string StringUtils::ensureSize(const std::string &data, int size)
     }
 }
 
+std::string StringUtils::ltrim(const std::string& s)
+{
+    std::string data = s;
+    data.erase(data.begin(), std::find_if(data.begin(), data.end(),
+                                    std::not1(std::ptr_fun<int, int>(std::isspace))));
+    return data;
+}
 
+std::string StringUtils::rtrim(const std::string& s)
+{
+    std::string data = s;
+    data.erase(std::find_if(data.rbegin(), data.rend(),
+                         std::not1(std::ptr_fun<int, int>(std::isspace))).base(), data.end());
+    return data;
+}
+
+std::string StringUtils::trim(const std::string& s)
+{
+    return ltrim(rtrim(s));
+}
+
+std::string StringUtils::removeSpaces(const std::string &s)
+{
+    std::string data = s;
+    data.erase(std::remove_if(data.begin(), data.end(), std::ptr_fun<int, int>(std::isspace)), data.end());
+    return data;
+}

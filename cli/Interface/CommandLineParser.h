@@ -7,6 +7,8 @@
 
 # include "../DBO/CommandLineOption.h"
 
+class CommandLineOption;
+
 class CommandLineParser
 {
 public:

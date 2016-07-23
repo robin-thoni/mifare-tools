@@ -4,8 +4,9 @@
 
 #include "CommandLineOption.h"
 
-CommandLineOption::CommandLineOption(const std::string &longName, char shortName, const std::string &description,
-                                     const std::string &valueName, const std::string &defaultValue)
+CommandLineOption::CommandLineOption(CommandLineParser* parser, const std::string &longName, char shortName,
+                                     const std::string &description, const std::string &valueName,
+                                     const std::string &defaultValue)
     : _longName(longName)
     , _shortName(shortName)
     , _description(description)
@@ -13,6 +14,7 @@ CommandLineOption::CommandLineOption(const std::string &longName, char shortName
     , _defaultValue(defaultValue)
     , _isSet(false)
 {
+    parser->addOption(this);
 }
 
 const std::string &CommandLineOption::getLongName() const

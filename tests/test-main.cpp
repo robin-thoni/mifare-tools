@@ -100,6 +100,38 @@ TEST(StringUtils, ensureSize)
   ASSERT_EQ(StringUtils::ensureSize("test", 5), std::string({'t', 'e', 's', 't', '\0'}));
 }
 
+TEST(StringUtils, ltrim)
+{
+  ASSERT_EQ(StringUtils::ltrim("  \n 42"), "42");
+  ASSERT_EQ(StringUtils::ltrim("  \n 42 \n"), "42 \n");
+  ASSERT_EQ(StringUtils::ltrim("42  \n "), "42  \n ");
+  ASSERT_EQ(StringUtils::ltrim(" 42 \n 42  \n "), "42 \n 42  \n ");
+}
+
+TEST(StringUtils, rtrim)
+{
+  ASSERT_EQ(StringUtils::rtrim("  \n 42"), "  \n 42");
+  ASSERT_EQ(StringUtils::rtrim("  \n 42 \n"), "  \n 42");
+  ASSERT_EQ(StringUtils::rtrim("42  \n "), "42");
+  ASSERT_EQ(StringUtils::rtrim(" 42 \n 42  \n "), " 42 \n 42");
+}
+
+TEST(StringUtils, trim)
+{
+  ASSERT_EQ(StringUtils::trim("  \n 42"), "42");
+  ASSERT_EQ(StringUtils::trim("  \n 42 \n"), "42");
+  ASSERT_EQ(StringUtils::trim("42  \n "), "42");
+  ASSERT_EQ(StringUtils::trim(" 42 \n 42  \n "), "42 \n 42");
+}
+
+TEST(StringUtils, removeSpaces)
+{
+  ASSERT_EQ(StringUtils::removeSpaces("  \n 42"), "42");
+  ASSERT_EQ(StringUtils::removeSpaces("  \n 42 \n"), "42");
+  ASSERT_EQ(StringUtils::removeSpaces("42  \n "), "42");
+  ASSERT_EQ(StringUtils::removeSpaces(" 42 \n 42  \n "), "4242");
+}
+
 TEST(ArrayUtils, getArrayBitimple)
 {
   const unsigned char buf[] = {0x04};
