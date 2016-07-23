@@ -9,9 +9,9 @@ FreeFareTagBusiness::FreeFareTagBusiness(std::shared_ptr<FreeFareTag> tag)
 {
 }
 
-ResultBool FreeFareTagBusiness::authenticate(int sector, int block, std::string key, int keyType)
+ResultBool FreeFareTagBusiness::authenticate(int sector, std::string key, int keyType)
 {
-    return _tag->authenticate(sector, block, key, keyType);
+    return _tag->authenticate(sector, key, keyType);
 }
 
 ResultString FreeFareTagBusiness::readBlock(int sector, int block, std::string key, int keyType)
@@ -52,33 +52,29 @@ std::shared_ptr<FreeFareTag> FreeFareTagBusiness::getTag() const
 
 Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys, std::function<void(int, int)> cb)
 {
-    std::vector<std::vector<std::pair<std::string, std::string>>> mappedKeys;
+    MappedKeys mappedKeys;
 
     for (int i = 0; i < 16; ++i) {
-        std::vector<std::pair<std::string, std::string>> sectorKeys;
-        for (int j = 0; j < 4; ++j) {
-            std::pair<std::string, std::string> blockKeys;
-            for (int k = 0; k < keys.size(); ++k) {
-                auto key = keys[k];
-                if (authenticate(i, j, key, MFC_KEY_A)) {
-                    blockKeys.first = key;
-                }
-                if (authenticate(i, j, key, MFC_KEY_B)) {
-                    blockKeys.second = key;
-                }
-                if (cb != 0) {
-                    cb((i * 4 * keys.size()) + (j * keys.size()) + k + 1, 16 * 4 * keys.size());
-                }
-                if (!blockKeys.first.empty() && !blockKeys.second.empty()) {
-                    break;
-                }
+        std::pair<std::string, std::string> blockKeys;
+        for (int k = 0; k < keys.size(); ++k) {
+            auto key = keys[k];
+            if (authenticate(i, key, MFC_KEY_A)) {
+                blockKeys.first = key;
             }
-            sectorKeys.push_back(blockKeys);
+            if (authenticate(i, key, MFC_KEY_B)) {
+                blockKeys.second = key;
+            }
+            if (cb != 0) {
+                cb((i * keys.size()) + k + 1, 16 * keys.size());
+            }
+            if (!blockKeys.first.empty() && !blockKeys.second.empty()) {
+                break;
+            }
         }
-        mappedKeys.push_back(sectorKeys);
+        mappedKeys.push_back(blockKeys);
     }
 
-    return Result<std::vector<std::vector<std::pair<std::string, std::string>>>>::ok(mappedKeys);
+    return Result<MappedKeys>::ok(mappedKeys);
 }
 
 Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::function<void(int, int)> cb)
@@ -86,30 +82,23 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::f
     if (keys.size() != 16) {
         return Result<std::vector<SectorDbo>>::error("Must have 16 sectors");
     }
-    for (int i = 0; i < keys.size(); ++i) {
-        auto key = keys[i];
-        if (key.size() != 4) {
-            return Result<std::vector<SectorDbo>>::error("Must have 4 keys in sector " + i);
-        }
-    }
     std::vector<SectorDbo> sectors;
     for (int s = 0; s < keys.size(); ++s) {
-        auto sectorKeys = keys[s];
+        auto sectorKey = keys[s];
         SectorDbo sector;
         bool keyA = false;
         bool keyB = false;
-        for (int b = 0; b < sectorKeys.size() - 1; ++b) {
-            auto blockKey = sectorKeys[b];
+        for (int b = 0; b < 3; ++b) {
             std::string data = "";
-            if (!blockKey.first.empty()) {
-                auto blockResult = readBlock(s, b, blockKey.first, MFC_KEY_A);
+            if (!sectorKey.first.empty()) {
+                auto blockResult = readBlock(s, b, sectorKey.first, MFC_KEY_A);
                 if (blockResult) {
                     data = blockResult.getData();
                     keyA = true;
                 }
             }
-            if (!blockKey.second.empty()) {
-                auto blockResult = readBlock(s, b, blockKey.second, MFC_KEY_B);
+            if (!sectorKey.second.empty()) {
+                auto blockResult = readBlock(s, b, sectorKey.second, MFC_KEY_B);
                 if (blockResult) {
                     if (data.empty()) {
                         data = blockResult.getData();
@@ -119,37 +108,36 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::f
             }
             sector.setBlock(b, data);
             if (cb != 0) {
-                cb((s * sectorKeys.size()) + b + 1, keys.size() * sectorKeys.size());
+                cb((s * 4) + b + 1, keys.size() * 4);
             }
         }
-        int b = sectorKeys.size() - 1;
-        auto blockKey = sectorKeys[b];
+        int b = 3;
         std::string dataA = "";
         std::string dataB = "";
-        if (!blockKey.first.empty()) {
-            auto blockResult = readBlock(s, b, blockKey.first, MFC_KEY_A);
+        if (!sectorKey.first.empty()) {
+            auto blockResult = readBlock(s, b, sectorKey.first, MFC_KEY_A);
             if (blockResult) {
                 dataA = blockResult.getData();
                 keyA = true;
             }
         }
-        if (!blockKey.second.empty()) {
-            auto blockResult = readBlock(s, b, blockKey.second, MFC_KEY_B);
+        if (!sectorKey.second.empty()) {
+            auto blockResult = readBlock(s, b, sectorKey.second, MFC_KEY_B);
             if (blockResult) {
                 dataB = blockResult.getData();
                 keyB = true;
             }
         }
         if (cb != 0) {
-            cb((s * sectorKeys.size()) + b + 1, keys.size() * sectorKeys.size());
+            cb((s * 4) + b + 1, keys.size() * 4);
         }
 
         sector.setBlock(b, dataA);
         AccessBitsDbo accessBitsDboA = sector.getAccessBitsDbo();
         sector.setBlock(b, dataB);
         AccessBitsDbo accessBitsDboB = sector.getAccessBitsDbo();
-        sector.setKeyA(keyA ? blockKey.first : "");
-        sector.setKeyB(keyB ? blockKey.second : "");
+        sector.setKeyA(keyA ? sectorKey.first : "");
+        sector.setKeyB(keyB ? sectorKey.second : "");
 
         std::string accessBits;
         if (keyA && accessBitsDboA.canKeyAReadAccessBitsTrailer()) {

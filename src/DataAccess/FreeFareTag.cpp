@@ -18,28 +18,27 @@ FreeFareTag::~FreeFareTag()
     freefare_free_tag(_tag);
 }
 
-ResultBool FreeFareTag::authenticate(int sector, int block, std::string key, int keyType)
+ResultBool FreeFareTag::authenticate(int sector, std::string key, int keyType)
 {
+
     if (mifare_classic_connect(_tag) != 0) {
         return ResultBool::error("Failed to connect to MIFARE tag");
     }
-
-    block = mifare_classic_sector_first_block((MifareClassicBlockNumber)sector) + block;
+    int block = mifare_classic_sector_last_block((MifareClassicBlockNumber)sector);
     if (mifare_classic_authenticate(_tag, (MifareClassicBlockNumber)block, (const unsigned char*)key.c_str(),
                                     (MifareClassicKeyType)keyType) != 0) {
         return ResultBool::error("Failed to authenticate to MIFARE tag");
     }
-
     mifare_classic_disconnect(_tag);
     return ResultBool::ok(true);
 }
 
 ResultString FreeFareTag::readBlock(int sector, int block, std::string key, int keyType)
 {
+
     if (mifare_classic_connect(_tag) != 0) {
         return ResultString::error("Failed to connect to MIFARE tag");
     }
-
     block = mifare_classic_sector_first_block((MifareClassicBlockNumber)sector) + block;
     if (mifare_classic_authenticate(_tag, (MifareClassicBlockNumber)block, (const unsigned char*)key.c_str(),
                                     (MifareClassicKeyType)keyType) != 0) {
@@ -50,7 +49,6 @@ ResultString FreeFareTag::readBlock(int sector, int block, std::string key, int 
     if (mifare_classic_read(_tag, (MifareClassicBlockNumber)block, &data)) {
         return ResultString::error("Failed to read MIFARE tag data");
     }
-
     mifare_classic_disconnect(_tag);
     return ResultString::ok(std::string((const char*)data, sizeof(data)));
 }

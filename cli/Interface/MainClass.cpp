@@ -121,7 +121,7 @@ int MainClass::main()
 //    std::vector<std::string> keys;
 //    keys.push_back(StringUtils::humanToRaw("8829da9daf76").getData());
 //    keys.push_back(StringUtils::humanToRaw("ffffffffffff").getData());
-//    keys.push_back(StringUtils::humanToRaw("484558414354").getData());
+    keys.push_back(StringUtils::humanToRaw("484558414354").getData());
 
     int res = dump(tag, keys);
 //    int res = mapKeys(tag, keys);
@@ -134,21 +134,22 @@ int MainClass::main()
 
 int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
-    auto mappedKeysResult = tag->mapKeys(keys, printPercent);
-    std::cout << "\r";
+    auto mappedKeysResult = tag->mapKeys(keys, printPercentMapKeys);
+    if (isatty(1)) {
+        std::cout << "\r";
+    }
     if (!mappedKeysResult) {
         mappedKeysResult.print();
     }
     else {
         auto mappedKeys = mappedKeysResult.getData();
         for (int s = 0; s < mappedKeys.size(); ++s) {
-            auto sectorKeys = mappedKeys[s];
+            auto sectorKey = mappedKeys[s];
             std::cout << "+Sector: " << s << std::endl;
-            for (int b = 0; b < sectorKeys.size(); ++b) {
-                auto blockKeys = sectorKeys[b];
+            for (int b = 0; b < 4; ++b) {
                 std::cout << "+Block: " << b << std::endl;
-                std::cout << "Key A: " << StringUtils::rawToHuman(blockKeys.first) << std::endl;
-                std::cout << "Key B: " << StringUtils::rawToHuman(blockKeys.second) << std::endl;
+                std::cout << "Key A: " << StringUtils::rawToHuman(sectorKey.first) << std::endl;
+                std::cout << "Key B: " << StringUtils::rawToHuman(sectorKey.second) << std::endl;
             }
         }
     }
@@ -157,8 +158,10 @@ int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std
 
 int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
-    auto dumpResult = tag->dump(keys, printPercent, printPercent);
-    std::cout << "\r";
+    auto dumpResult = tag->dump(keys, printPercentMapKeys, printPercentDump);
+    if (isatty(1)) {
+        std::cout << "\r";
+    }
     if (!dumpResult) {
         dumpResult.print();
         return 7;
@@ -191,27 +194,41 @@ int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::s
 
 void MainClass::printBlockAccessBits(const AccessBitsDbo &accessBits, int block)
 {
-    std::cout << "read: " << (accessBits.canKeyAReadBlock(block) ? "A" : "") << (accessBits.canKeyBReadBlock(block) ? "B" : "");
-    std::cout << "\t write: " << (accessBits.canKeyAWriteBlock(block) ? "A" : "") << (accessBits.canKeyBWriteBlock(block) ? "B" : "");
-    std::cout << "\t increment: " << (accessBits.canKeyAIncrementBlock(block) ? "A" : "") << (accessBits.canKeyBIncrementBlock(block) ? "B" : "");
-    std::cout << "\t decrement: " << (accessBits.canKeyADecrementBlock(block) ? "A" : "") << (accessBits.canKeyBDecrementBlock(block) ? "B" : "") << std::endl;
+    std::cout << "read: " << (accessBits.canKeyAReadBlock(block) ? "A" : " ") << (accessBits.canKeyBReadBlock(block) ? "B" : " ");
+    std::cout << "\t write: " << (accessBits.canKeyAWriteBlock(block) ? "A" : " ") << (accessBits.canKeyBWriteBlock(block) ? "B" : " ");
+    std::cout << "\t increment: " << (accessBits.canKeyAIncrementBlock(block) ? "A" : " ") << (accessBits.canKeyBIncrementBlock(block) ? "B" : " ");
+    std::cout << "\t decrement: " << (accessBits.canKeyADecrementBlock(block) ? "A" : " ") << (accessBits.canKeyBDecrementBlock(block) ? "B" : " ") << std::endl;
 }
 
 void MainClass::printTrailerAccessBits(const AccessBitsDbo &accessBits)
 {
-    std::cout << "key A read: " << (accessBits.canKeyAReadKeyATrailer() ? "A" : "") << (accessBits.canKeyBReadKeyATrailer() ? "B" : "");
-    std::cout << "\t key A write: " << (accessBits.canKeyAWriteKeyATrailer() ? "A" : "") << (accessBits.canKeyBWriteKeyATrailer() ? "B" : "");
+    std::cout << "key A read: " << (accessBits.canKeyAReadKeyATrailer() ? "A" : " ") << (accessBits.canKeyBReadKeyATrailer() ? "B" : " ");
+    std::cout << "\t key A write: " << (accessBits.canKeyAWriteKeyATrailer() ? "A" : " ") << (accessBits.canKeyBWriteKeyATrailer() ? "B" : " ");
 
-    std::cout << "\t AC bits read: " << (accessBits.canKeyAReadAccessBitsTrailer() ? "A" : "") << (accessBits.canKeyBReadAccessBitsTrailer() ? "B" : "");
-    std::cout << "\t AC bits write: " << (accessBits.canKeyAWriteAccessBitsTrailer() ? "A" : "") << (accessBits.canKeyBWriteAccessBitsTrailer() ? "B" : "");
+    std::cout << "\t AC bits read: " << (accessBits.canKeyAReadAccessBitsTrailer() ? "A" : " ") << (accessBits.canKeyBReadAccessBitsTrailer() ? "B" : " ");
+    std::cout << "\t AC bits write: " << (accessBits.canKeyAWriteAccessBitsTrailer() ? "A" : " ") << (accessBits.canKeyBWriteAccessBitsTrailer() ? "B" : " ");
 
-    std::cout << "\t key B read: " << (accessBits.canKeyAReadKeyBTrailer() ? "A" : "") << (accessBits.canKeyBReadKeyBTrailer() ? "B" : "");
-    std::cout << "\t key B write: " << (accessBits.canKeyAWriteKeyBTrailer() ? "A" : "") << (accessBits.canKeyBWriteKeyBTrailer() ? "B" : "") << std::endl;;
+    std::cout << "\t key B read: " << (accessBits.canKeyAReadKeyBTrailer() ? "A" : " ") << (accessBits.canKeyBReadKeyBTrailer() ? "B" : " ");
+    std::cout << "\t key B write: " << (accessBits.canKeyAWriteKeyBTrailer() ? "A" : " ") << (accessBits.canKeyBWriteKeyBTrailer() ? "B" : " ") << std::endl;;
 }
 
-void MainClass::printPercent(int done, int total)
+void MainClass::printPercent(int done, int total, const std::string& header)
 {
-    std::cout << "\r\033[2K" << std::fixed << std::setprecision(1) << ((float)done / (float)total * 100.0) << "%" << std::flush;
+    if (isatty(1)) {
+        std::cout << "\r\033[2K" << header << ": " << std::fixed << std::setprecision(1)
+        << ((float) done / (float) total * 100.0) << "%" << std::flush;
+    }
+//    std::cout << std::fixed << std::setprecision(1) << ((float)done / (float)total * 100.0) << "%" << std::endl;
+}
+
+void MainClass::printPercentMapKeys(int done, int total)
+{
+    printPercent(done, total, "Mapping keys");
+}
+
+void MainClass::printPercentDump(int done, int total)
+{
+    printPercent(done, total, "Dumping");
 }
 
 void MainClass::printVersion() const

@@ -31,7 +31,11 @@ public:
 
     void printVersion() const;
 
-    static void printPercent(int done, int total);
+    static void printPercent(int done, int total, const std::string& header);
+
+    static void printPercentMapKeys(int done, int total);
+
+    static void printPercentDump(int done, int total);
 
 private:
     int _argc;
