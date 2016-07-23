@@ -111,7 +111,9 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::f
             if (!blockKey.second.empty()) {
                 auto blockResult = readBlock(s, b, blockKey.second, MFC_KEY_B);
                 if (blockResult) {
-                    data = blockResult.getData();
+                    if (data.empty()) {
+                        data = blockResult.getData();
+                    }
                     keyB = true;
                 }
             }
@@ -122,35 +124,39 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::f
         }
         int b = sectorKeys.size() - 1;
         auto blockKey = sectorKeys[b];
-        std::string data = "";
+        std::string dataA = "";
+        std::string dataB = "";
         if (!blockKey.first.empty()) {
             auto blockResult = readBlock(s, b, blockKey.first, MFC_KEY_A);
             if (blockResult) {
-                data = blockResult.getData();
+                dataA = blockResult.getData();
                 keyA = true;
             }
         }
         if (!blockKey.second.empty()) {
             auto blockResult = readBlock(s, b, blockKey.second, MFC_KEY_B);
             if (blockResult) {
-                data = blockResult.getData();
+                dataB = blockResult.getData();
                 keyB = true;
             }
         }
-        sector.setBlock(b, data);
-        AccessBitsDbo accessBitsDbo = sector.getAccessBitsDbo();
         if (cb != 0) {
             cb((s * sectorKeys.size()) + b + 1, keys.size() * sectorKeys.size());
         }
 
+        sector.setBlock(b, dataA);
+        AccessBitsDbo accessBitsDboA = sector.getAccessBitsDbo();
+        sector.setBlock(b, dataB);
+        AccessBitsDbo accessBitsDboB = sector.getAccessBitsDbo();
         sector.setKeyA(keyA ? blockKey.first : "");
         sector.setKeyB(keyB ? blockKey.second : "");
+
         std::string accessBits;
-        if (!data.empty())
-        {
-            if ((keyA && accessBitsDbo.canKeyAReadAccessBitsTrailer()) || (keyB && accessBitsDbo.canKeyBReadAccessBitsTrailer())) {
-                accessBits = accessBitsDbo.getBits();
-            }
+        if (keyA && accessBitsDboA.canKeyAReadAccessBitsTrailer()) {
+            accessBits = accessBitsDboA.getBits();
+        }
+        else if (keyB && accessBitsDboB.canKeyBReadAccessBitsTrailer()) {
+            accessBits = accessBitsDboB.getBits();
         }
         sector.setAccessBits(accessBits);
 

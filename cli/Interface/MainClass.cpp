@@ -128,9 +128,14 @@ int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::s
         for (int b = 0; b < 3; ++b) {
             std::cout << (sector.hasBlock(b) ? StringUtils::rawToHuman(sector.getBlock(b)) : std::string(32, '-')) << std::endl;
         }
-        std::cout << (sector.hasKeyA() ? StringUtils::rawToHuman(sector.getKeyA()) : std::string(12, '-')) << " "
-            << (sector.hasAccessBits() ? StringUtils::rawToHuman(sector.getAccessBits()) : std::string(8, '-'))  << " "
-            << (sector.hasKeyB() ? StringUtils::rawToHuman(sector.getKeyB()) : std::string(12, '-')) << std::endl;
+        std::cout << "" << (sector.hasKeyA() ? StringUtils::rawToHuman(sector.getKeyA()) : std::string(12, '-'))
+        << (sector.hasAccessBits() ? StringUtils::rawToHuman(sector.getAccessBits()) : std::string(8, '-'))
+        << (sector.hasKeyB() ? StringUtils::rawToHuman(sector.getKeyB()) : std::string(12, '-')) << std::endl;
+
+
+        std::cout << "+Trailer key A: " << (sector.hasKeyA() ? StringUtils::rawToHuman(sector.getKeyA()) : std::string(12, '-'))
+            << "\t AC bits: " << (sector.hasAccessBits() ? StringUtils::rawToHuman(sector.getAccessBits()) : std::string(8, '-'))
+            << "\t key B: " << (sector.hasKeyB() ? StringUtils::rawToHuman(sector.getKeyB()) : std::string(12, '-')) << std::endl;
         AccessBitsDbo accessBitsDbo = sector.getAccessBitsDbo();
         for (int b = 0; b < 3; ++b) {
             std::cout << "+Block: " << b << " ";
@@ -145,21 +150,21 @@ int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::s
 void MainClass::printBlockAccessBits(const AccessBitsDbo &accessBits, int block)
 {
     std::cout << "read: " << (accessBits.canKeyAReadBlock(block) ? "A" : "") << (accessBits.canKeyBReadBlock(block) ? "B" : "");
-    std::cout << " write: " << (accessBits.canKeyAWriteBlock(block) ? "A" : "") << (accessBits.canKeyBWriteBlock(block) ? "B" : "");
-    std::cout << " increment: " << (accessBits.canKeyAIncrementBlock(block) ? "A" : "") << (accessBits.canKeyBIncrementBlock(block) ? "B" : "");
-    std::cout << " decrement: " << (accessBits.canKeyADecrementBlock(block) ? "A" : "") << (accessBits.canKeyBDecrementBlock(block) ? "B" : "") << std::endl;
+    std::cout << "\t write: " << (accessBits.canKeyAWriteBlock(block) ? "A" : "") << (accessBits.canKeyBWriteBlock(block) ? "B" : "");
+    std::cout << "\t increment: " << (accessBits.canKeyAIncrementBlock(block) ? "A" : "") << (accessBits.canKeyBIncrementBlock(block) ? "B" : "");
+    std::cout << "\t decrement: " << (accessBits.canKeyADecrementBlock(block) ? "A" : "") << (accessBits.canKeyBDecrementBlock(block) ? "B" : "") << std::endl;
 }
 
 void MainClass::printTrailerAccessBits(const AccessBitsDbo &accessBits)
 {
     std::cout << "key A read: " << (accessBits.canKeyAReadKeyATrailer() ? "A" : "") << (accessBits.canKeyBReadKeyATrailer() ? "B" : "");
-    std::cout << " key A write: " << (accessBits.canKeyAWriteKeyATrailer() ? "A" : "") << (accessBits.canKeyBWriteKeyATrailer() ? "B" : "");
+    std::cout << "\t key A write: " << (accessBits.canKeyAWriteKeyATrailer() ? "A" : "") << (accessBits.canKeyBWriteKeyATrailer() ? "B" : "");
 
-    std::cout << " AC bits read: " << (accessBits.canKeyAReadAccessBitsTrailer() ? "A" : "") << (accessBits.canKeyBReadAccessBitsTrailer() ? "B" : "");
-    std::cout << " AC bits write: " << (accessBits.canKeyAWriteAccessBitsTrailer() ? "A" : "") << (accessBits.canKeyBWriteAccessBitsTrailer() ? "B" : "");
+    std::cout << "\t AC bits read: " << (accessBits.canKeyAReadAccessBitsTrailer() ? "A" : "") << (accessBits.canKeyBReadAccessBitsTrailer() ? "B" : "");
+    std::cout << "\t AC bits write: " << (accessBits.canKeyAWriteAccessBitsTrailer() ? "A" : "") << (accessBits.canKeyBWriteAccessBitsTrailer() ? "B" : "");
 
-    std::cout << " key B read: " << (accessBits.canKeyAReadKeyBTrailer() ? "A" : "") << (accessBits.canKeyBReadKeyBTrailer() ? "B" : "");
-    std::cout << " key B write: " << (accessBits.canKeyAWriteKeyBTrailer() ? "A" : "") << (accessBits.canKeyBWriteKeyBTrailer() ? "B" : "") << std::endl;;
+    std::cout << "\t key B read: " << (accessBits.canKeyAReadKeyBTrailer() ? "A" : "") << (accessBits.canKeyBReadKeyBTrailer() ? "B" : "");
+    std::cout << "\t key B write: " << (accessBits.canKeyAWriteKeyBTrailer() ? "A" : "") << (accessBits.canKeyBWriteKeyBTrailer() ? "B" : "") << std::endl;;
 }
 
 void MainClass::printPercent(int done, int total)
