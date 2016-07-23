@@ -32,7 +32,7 @@ Result<SectorDbo> FreeFareTagBusiness::readSector(int sector, std::string key, i
             return Result<SectorDbo>::error(data);
         }
     }
-    return SectorDbo::parse(res);
+    return Result<SectorDbo>::ok(SectorDbo(res));
 }
 
 const std::string &FreeFareTagBusiness::getUid() const
@@ -50,7 +50,7 @@ std::shared_ptr<FreeFareTag> FreeFareTagBusiness::getTag() const
     return _tag;
 }
 
-Result<std::vector<std::vector<std::pair<std::string, std::string>>>> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys)
+Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys)
 {
     std::vector<std::vector<std::pair<std::string, std::string>>> mappedKeys;
 
@@ -59,13 +59,14 @@ Result<std::vector<std::vector<std::pair<std::string, std::string>>>> FreeFareTa
         for (int j = 0; j < 4; ++j) {
             std::pair<std::string, std::string> blockKeys;
             for (auto key : keys) {
-                auto res = authenticate(i, j, key, MFC_KEY_A);
-                if (res) {
+                if (authenticate(i, j, key, MFC_KEY_A)) {
                     blockKeys.first = key;
                 }
-                res = authenticate(i, j, key, MFC_KEY_B);
-                if (res) {
+                if (authenticate(i, j, key, MFC_KEY_B)) {
                     blockKeys.second = key;
+                }
+                if (!blockKeys.first.empty() && !blockKeys.second.empty()) {
+                    break;
                 }
             }
             sectorKeys.push_back(blockKeys);
@@ -74,4 +75,86 @@ Result<std::vector<std::vector<std::pair<std::string, std::string>>>> FreeFareTa
     }
 
     return Result<std::vector<std::vector<std::pair<std::string, std::string>>>>::ok(mappedKeys);
+}
+
+Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys)
+{
+    if (keys.size() != 16) {
+        return Result<std::vector<SectorDbo>>::error("Must have 16 sectors");
+    }
+    for (int i = 0; i < keys.size(); ++i) {
+        auto key = keys[i];
+        if (key.size() != 4) {
+            return Result<std::vector<SectorDbo>>::error("Must have 4 keys in sector " + i);
+        }
+    }
+    std::vector<SectorDbo> sectors;
+    for (int s = 0; s < keys.size(); ++s) {
+        auto sectorKeys = keys[s];
+        SectorDbo sector;
+        bool keyA = false;
+        bool keyB = false;
+        for (int b = 0; b < sectorKeys.size() - 1; ++b) {
+            auto blockKey = sectorKeys[b];
+            std::string data = "";
+            if (!blockKey.first.empty()) {
+                auto blockResult = readBlock(s, b, blockKey.first, MFC_KEY_A);
+                if (blockResult) {
+                    data = blockResult.getData();
+                    keyA = true;
+                }
+            }
+            if (!blockKey.second.empty()) {
+                auto blockResult = readBlock(s, b, blockKey.second, MFC_KEY_B);
+                if (blockResult) {
+                    data = blockResult.getData();
+                    keyB = true;
+                }
+            }
+            sector.setBlock(b, data);
+        }
+        int b = sectorKeys.size() - 1;
+        auto blockKey = sectorKeys[b];
+        std::string data = "";
+        if (!blockKey.first.empty()) {
+            auto blockResult = readBlock(s, b, blockKey.first, MFC_KEY_A);
+            if (blockResult) {
+                data = blockResult.getData();
+                keyA = true;
+            }
+        }
+        if (!blockKey.second.empty()) {
+            auto blockResult = readBlock(s, b, blockKey.second, MFC_KEY_B);
+            if (blockResult) {
+                data = blockResult.getData();
+                keyB = true;
+            }
+        }
+        sector.setBlock(b, data);
+        AccessBitsDbo accessBitsDbo = sector.getAccessBitsDbo();
+
+        sector.setKeyA(keyA ? blockKey.first : "");
+        sector.setKeyB(keyB ? blockKey.second : "");
+        std::string accessBits;
+        if (!data.empty())
+        {
+            if ((keyA && accessBitsDbo.canKeyAReadAccessBitsTrailer()) || (keyB && accessBitsDbo.canKeyBReadAccessBitsTrailer())) {
+                accessBits = accessBitsDbo.getBits();
+            }
+        }
+        sector.setAccessBits(accessBits);
+
+        sectors.push_back(sector);
+    }
+
+    return Result<std::vector<SectorDbo>>::ok(sectors);
+}
+
+Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(std::vector<std::string> keys)
+{
+    auto mappedKeysResult = mapKeys(keys);
+    if (!mappedKeysResult) {
+        return Result<std::vector<SectorDbo>>::error(mappedKeysResult);
+    }
+    return dump(mappedKeysResult.getData());
 }

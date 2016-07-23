@@ -10,6 +10,8 @@
 #include <DataAccess/FreeFareTag.h>
 #include <DataAccess/SectorDbo.h>
 
+typedef std::vector<std::vector<std::pair<std::string, std::string>>> MappedKeys;
+
 class FreeFareTagBusiness
 {
 public:
@@ -21,7 +23,11 @@ public:
 
     Result<SectorDbo> readSector(int sector, std::string key, int keyType);
 
-    Result<std::vector<std::vector<std::pair<std::string, std::string>>>> mapKeys(std::vector<std::string> keys);
+    Result<MappedKeys> mapKeys(std::vector<std::string> keys);
+
+    Result<std::vector<SectorDbo>> dump(MappedKeys keys);
+
+    Result<std::vector<SectorDbo>> dump(std::vector<std::string> keys);
 
     const std::string& getUid() const;
 

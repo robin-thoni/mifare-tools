@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <DataAccess/LibNfc.h>
 #include <DBO/StringUtils.h>
+#include <DBO/ArrayUtils.h>
 #include <DBO/AccessBitsDbo.h>
 
 TEST(StringUtils, rawToHumanChar)
@@ -92,48 +93,55 @@ TEST(StringUtils, humanToRaw)
   ASSERT_EQ(StringUtils::humanToRaw("1a\n00f").getError(), "Malformed hex data at char 2");
 }
 
-TEST(AccessBitsDbo, getArrayBitimple)
+TEST(StringUtils, ensureSize)
 {
-  const unsigned char buf[] = {0x04};
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 0));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 1));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 2));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 3));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 4));
-  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 5));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 6));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 7));
+  ASSERT_EQ(StringUtils::ensureSize("test", 3), "tes");
+  ASSERT_EQ(StringUtils::ensureSize("test", 4), "test");
+  ASSERT_EQ(StringUtils::ensureSize("test", 5), std::string({'t', 'e', 's', 't', '\0'}));
 }
 
-TEST(AccessBitsDbo, getArrayBitMultiple)
+TEST(ArrayUtils, getArrayBitimple)
+{
+  const unsigned char buf[] = {0x04};
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 0));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 1));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 2));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 3));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 4));
+  ASSERT_TRUE(ArrayUtils::getArrayBit(buf, 5));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 6));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 7));
+}
+
+TEST(ArrayUtils, getArrayBitMultiple)
 {
   const unsigned char buf[] = {0x80, 0x14, 0x01};
-  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 0));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 1));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 2));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 3));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 4));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 5));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 6));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 7));
+  ASSERT_TRUE(ArrayUtils::getArrayBit(buf, 0));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 1));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 2));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 3));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 4));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 5));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 6));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 7));
 
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 8));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 9));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 10));
-  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 11));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 12));
-  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 13));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 14));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 15));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 8));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 9));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 10));
+  ASSERT_TRUE(ArrayUtils::getArrayBit(buf, 11));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 12));
+  ASSERT_TRUE(ArrayUtils::getArrayBit(buf, 13));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 14));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 15));
 
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 16));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 17));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 18));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 19));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 20));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 21));
-  ASSERT_FALSE(AccessBitsDbo::getArrayBit(buf, 22));
-  ASSERT_TRUE(AccessBitsDbo::getArrayBit(buf, 23));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 16));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 17));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 18));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 19));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 20));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 21));
+  ASSERT_FALSE(ArrayUtils::getArrayBit(buf, 22));
+  ASSERT_TRUE(ArrayUtils::getArrayBit(buf, 23));
 }
 
 TEST(AccessBitsDbo, getBit)

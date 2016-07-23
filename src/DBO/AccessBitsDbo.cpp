@@ -5,6 +5,8 @@
 #include <cstring>
 #include <iostream>
 #include "AccessBitsDbo.h"
+#include "StringUtils.h"
+#include "ArrayUtils.h"
 
 const char AccessBitsDbo::nonInvertedBitPosition[4][4] = {
         {0,  0,  0,  0 },
@@ -24,7 +26,7 @@ AccessBitsDbo::AccessBitsDbo()
 }
 
 AccessBitsDbo::AccessBitsDbo(const std::string &bits)
-    : _bits(bits.substr(0, 4))
+    : _bits(StringUtils::ensureSize(bits, 4))
 {
 }
 
@@ -38,55 +40,29 @@ void AccessBitsDbo::setUserData(const char &data)
     _bits[_bits.length() - 1] = data;
 }
 
-void AccessBitsDbo::setBit(const char& i, const char& j, const bool& value)
+void AccessBitsDbo::setBit(int i, int j, const bool& value)
 {
     char buf[_bits.length()];
     memcpy(buf, _bits.c_str(), _bits.length());
 
-    setArrayBit(buf, nonInvertedBitPosition[i][j], value);
-    setArrayBit(buf, invertedBitPosition[i][j], !value);
+    ArrayUtils::setArrayBit(buf, nonInvertedBitPosition[i][j], value);
+    ArrayUtils::setArrayBit(buf, invertedBitPosition[i][j], !value);
 
     _bits = std::string(buf, _bits.length());
 }
 
-void AccessBitsDbo::setArrayBit(char *buf, const char &bitPosition, const bool &value)
-{
-    char byteOffset = (char)(bitPosition / 8);
-    char bitOffset = (char)(7 - (bitPosition % 8));
-    if(value)
-    {
-        buf[byteOffset] |=  (1 << bitOffset);
-    }
-    else
-    {
-        buf[byteOffset] &= ~(1 << bitOffset);
-    }
-}
-
-void AccessBitsDbo::setArrayBit(unsigned char *buf, const char &bitPosition, const bool &value)
-{
-    setArrayBit((char*)buf, bitPosition, value);
-}
-
-bool AccessBitsDbo::getBit(const char &i, const char &j) const
+bool AccessBitsDbo::getBit(int i, int j) const
 {
     const char* buf = _bits.c_str();
-    return getArrayBit(buf, nonInvertedBitPosition[i][j]) && !getArrayBit(buf, invertedBitPosition[i][j]);
+    return ArrayUtils::getArrayBit(buf, nonInvertedBitPosition[i][j]) && !ArrayUtils::getArrayBit(buf, invertedBitPosition[i][j]);
 }
 
-bool AccessBitsDbo::getArrayBit(const char *buf, const char &bitPosition)
+std::string AccessBitsDbo::getBits() const
 {
-    char byteOffset = (char)(bitPosition / 8);
-    char bitOffset = (char)(7 - (bitPosition % 8));
-    return (buf[byteOffset] >> bitOffset) & 1 == 1;
+    return _bits;
 }
 
-bool AccessBitsDbo::getArrayBit(const unsigned char *buf, const char &bitPosition)
-{
-    return getArrayBit((const char *)buf, bitPosition);
-}
-
-bool AccessBitsDbo::canKeyAReadBlock(const char &block) const
+bool AccessBitsDbo::canKeyAReadBlock(int block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -94,7 +70,7 @@ bool AccessBitsDbo::canKeyAReadBlock(const char &block) const
     return !c3 || (!c1 && !c2 && c3);
 }
 
-bool AccessBitsDbo::canKeyBReadBlock(const char &block) const
+bool AccessBitsDbo::canKeyBReadBlock(int block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -102,7 +78,7 @@ bool AccessBitsDbo::canKeyBReadBlock(const char &block) const
     return !c1 || !c2 || !c3;
 }
 
-bool AccessBitsDbo::canKeyAWriteBlock(const char &block) const
+bool AccessBitsDbo::canKeyAWriteBlock(int block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -110,7 +86,7 @@ bool AccessBitsDbo::canKeyAWriteBlock(const char &block) const
     return !c1 && !c2 && !c3;
 }
 
-bool AccessBitsDbo::canKeyBWriteBlock(const char &block) const
+bool AccessBitsDbo::canKeyBWriteBlock(int block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -118,7 +94,7 @@ bool AccessBitsDbo::canKeyBWriteBlock(const char &block) const
     return (!c2 && !c3) || (c1 && !c3) || (!c1 && c2 && c3);
 }
 
-bool AccessBitsDbo::canKeyAIncrementBlock(const char &block) const
+bool AccessBitsDbo::canKeyAIncrementBlock(int block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -126,7 +102,7 @@ bool AccessBitsDbo::canKeyAIncrementBlock(const char &block) const
     return !c1 && !c2 && !c3;
 }
 
-bool AccessBitsDbo::canKeyBIncrementBlock(const char &block) const
+bool AccessBitsDbo::canKeyBIncrementBlock(int block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -134,7 +110,7 @@ bool AccessBitsDbo::canKeyBIncrementBlock(const char &block) const
     return (!c1 && !c2 && !c3) || (c1 && c2 && !c3);
 }
 
-bool AccessBitsDbo::canKeyADecrementBlock(const char &block) const
+bool AccessBitsDbo::canKeyADecrementBlock(int block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);
@@ -142,7 +118,7 @@ bool AccessBitsDbo::canKeyADecrementBlock(const char &block) const
     return (!c1 && !c2) || (c1 && c2 && !c3);
 }
 
-bool AccessBitsDbo::canKeyBDecrementBlock(const char &block) const
+bool AccessBitsDbo::canKeyBDecrementBlock(int block) const
 {
     bool c1 = getBit(1, block);
     bool c2 = getBit(2, block);

@@ -14,9 +14,13 @@ public:
 
     int main();
 
-    int mapKeys(std::shared_ptr<FreeFareTagBusiness> tag);
+    int mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys);
 
-    int dump(std::shared_ptr<FreeFareTagBusiness> tag);
+    int dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys);
+
+    void printBlockAccessBits(const AccessBitsDbo& accessBits, int block);
+
+    void printTrailerAccessBits(const AccessBitsDbo& accessBits);
 
 private:
     int _argc;

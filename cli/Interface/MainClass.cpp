@@ -43,6 +43,7 @@ int MainClass::main()
     for (size_t i = 0; i < devices.size(); ++i) {
         std::cout << devices[i]->getConnStr() << std::endl;
     }
+    std::cout << "Using first device" << std::endl;
 
     auto device = devices[0];
     auto open = device->open();
@@ -52,30 +53,43 @@ int MainClass::main()
     }
 
     FreeFareDeviceBusiness freeFareDevice(device);
-    auto tags = freeFareDevice.getTags();
-    if (!tags) {
-        tags.print();
+    auto tagsResult = freeFareDevice.getTags();
+    if (!tagsResult) {
+        tagsResult.print();
         return 5;
     }
 
-    std::cout << "Found " << tags.getData().size() << " tags:" << std::endl;
-    for (size_t i = 0; i < tags.getData().size(); ++i) {
-        auto tag = tags.getData()[i];
+    auto tags = tagsResult.getData();
+    if (tags.size() == 0) {
+        std::cerr << "No tag found" << std::endl;
+        return 6;
+    }
+
+    std::cout << "Found " << tagsResult.getData().size() << " tags:" << std::endl;
+    for (size_t i = 0; i < tagsResult.getData().size(); ++i) {
+        auto tag = tagsResult.getData()[i];
         std::cout << "UID: " << tag->getUid() << std::endl;
         std::cout << "Type: " << tag->getType() << std::endl;
-        mapKeys(tag);
     }
+    std::cout << "Using first tag" << std::endl;
+
+    auto tag = tags[0];
+
+    std::vector<std::string> keys;
+//    keys.push_back(StringUtils::humanToRaw("8829da9daf76").getData());
+//    keys.push_back(StringUtils::humanToRaw("ffffffffffff").getData());
+    keys.push_back(StringUtils::humanToRaw("484558414354").getData());
+
+    int res = dump(tag, keys); //mapKeys(tag);
 
     device->close();
     libNfc.clean();
 
-    return 0;
+    return res;
 }
 
-int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag)
+int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
-    std::vector<std::string> keys;
-    keys.push_back(StringUtils::humanToRaw("8829da9daf76").getData());
     auto mappedKeysResult = tag->mapKeys(keys);
     if (!mappedKeysResult) {
         mappedKeysResult.print();
@@ -96,29 +110,50 @@ int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag)
     return 0;
 }
 
-int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag)
+int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
-    for(int s = 0; s < 16; ++s)
-    {
+    auto dumpResult = tag->dump(keys);
+    if (!dumpResult) {
+        dumpResult.print();
+        return 7;
+    }
+    auto dump = dumpResult.getData();
+    for(int s = 0; s < 16; ++s) {
         std::cout << "+Sector: " << s << std::endl;
-        auto sectorResult = tag->readSector(s, StringUtils::humanToRaw("8829da9daf76").getData(), MFC_KEY_A);
-        if (!sectorResult)
-        {
-            sectorResult.print();
+        auto sector = dump[s];
+        for (int b = 0; b < 3; ++b) {
+            std::cout << (sector.hasBlock(b) ? StringUtils::rawToHuman(sector.getBlock(b)) : std::string(32, '-')) << std::endl;
         }
-        else
-        {
-            auto sector = sectorResult.getData();
-            for (int b = 0; b < 3; ++b)
-            {
-                std::cout << StringUtils::rawToHuman(sector.getBlock(b)) << std::endl;
-            }
-            std::cout << StringUtils::rawToHuman(sector.getKeyA()) << " "
-            << StringUtils::rawToHuman(sector.getAccessBits()) << " "
-            << StringUtils::rawToHuman(sector.getKeyB()) << std::endl;
+        std::cout << (sector.hasKeyA() ? StringUtils::rawToHuman(sector.getKeyA()) : std::string(12, '-')) << " "
+            << (sector.hasAccessBits() ? StringUtils::rawToHuman(sector.getAccessBits()) : std::string(8, '-'))  << " "
+            << (sector.hasKeyB() ? StringUtils::rawToHuman(sector.getKeyB()) : std::string(12, '-')) << std::endl;
+        AccessBitsDbo accessBitsDbo = sector.getAccessBitsDbo();
+        for (int b = 0; b < 3; ++b) {
+            std::cout << "+Block: " << b << " ";
+            printBlockAccessBits(accessBitsDbo, b);
         }
+        std::cout << "+Block: 4 ";
+        printTrailerAccessBits(accessBitsDbo);
     }
     return 0;
 }
 
+void MainClass::printBlockAccessBits(const AccessBitsDbo &accessBits, int block)
+{
+    std::cout << "read: " << (accessBits.canKeyAReadBlock(block) ? "A" : "") << (accessBits.canKeyBReadBlock(block) ? "B" : "");
+    std::cout << " write: " << (accessBits.canKeyAWriteBlock(block) ? "A" : "") << (accessBits.canKeyBWriteBlock(block) ? "B" : "");
+    std::cout << " increment: " << (accessBits.canKeyAIncrementBlock(block) ? "A" : "") << (accessBits.canKeyBIncrementBlock(block) ? "B" : "");
+    std::cout << " decrement: " << (accessBits.canKeyADecrementBlock(block) ? "A" : "") << (accessBits.canKeyBDecrementBlock(block) ? "B" : "") << std::endl;
+}
 
+void MainClass::printTrailerAccessBits(const AccessBitsDbo &accessBits)
+{
+    std::cout << "key A read: " << (accessBits.canKeyAReadKeyATrailer() ? "A" : "") << (accessBits.canKeyBReadKeyATrailer() ? "B" : "");
+    std::cout << " key A write: " << (accessBits.canKeyAWriteKeyATrailer() ? "A" : "") << (accessBits.canKeyBWriteKeyATrailer() ? "B" : "");
+
+    std::cout << " AC bits read: " << (accessBits.canKeyAReadAccessBitsTrailer() ? "A" : "") << (accessBits.canKeyBReadAccessBitsTrailer() ? "B" : "");
+    std::cout << " AC bits write: " << (accessBits.canKeyAWriteAccessBitsTrailer() ? "A" : "") << (accessBits.canKeyBWriteAccessBitsTrailer() ? "B" : "");
+
+    std::cout << " key B read: " << (accessBits.canKeyAReadKeyBTrailer() ? "A" : "") << (accessBits.canKeyBReadKeyBTrailer() ? "B" : "");
+    std::cout << " key B write: " << (accessBits.canKeyAWriteKeyBTrailer() ? "A" : "") << (accessBits.canKeyBWriteKeyBTrailer() ? "B" : "") << std::endl;;
+}

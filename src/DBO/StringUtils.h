@@ -22,15 +22,17 @@ public:
     static std::string rawToHuman(int c);
     static std::string rawToHuman(unsigned long c);
     static std::string rawToHuman(long c);
-    static std::string rawToHuman(std::string raw);
+    static std::string rawToHuman(const std::string& raw);
 
-    static ResultString humanToRaw(std::string human);
+    static ResultString humanToRaw(const std::string& human);
 
-    static std::string toLower(std::string str);
+    static std::string toLower(const std::string& str);
     static char toLower(char c);
 
-    static std::string toUpper(std::string str);
+    static std::string toUpper(const std::string& str);
     static char toUpper(char c);
+
+    static std::string ensureSize(const std::string& data, int size);
 };
 
 

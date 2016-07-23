@@ -25,20 +25,21 @@ public:
     char getUserData() const;
     void setUserData(const char& data);
 
-    void setBit(const char& i, const char& j, const bool& value);
-    bool getBit(const char& i, const char& j) const;
+    void setBit(int i, int j, const bool& value);
+    bool getBit(int i, int j) const;
+    std::string getBits() const;
 
-    bool canKeyAReadBlock(const char& block) const;
-    bool canKeyBReadBlock(const char& block) const;
+    bool canKeyAReadBlock(int block) const;
+    bool canKeyBReadBlock(int block) const;
 
-    bool canKeyAWriteBlock(const char& block) const;
-    bool canKeyBWriteBlock(const char& block) const;
+    bool canKeyAWriteBlock(int block) const;
+    bool canKeyBWriteBlock(int block) const;
 
-    bool canKeyAIncrementBlock(const char& block) const;
-    bool canKeyBIncrementBlock(const char& block) const;
+    bool canKeyAIncrementBlock(int block) const;
+    bool canKeyBIncrementBlock(int block) const;
 
-    bool canKeyADecrementBlock(const char& block) const;
-    bool canKeyBDecrementBlock(const char& block) const;
+    bool canKeyADecrementBlock(int block) const;
+    bool canKeyBDecrementBlock(int block) const;
 
     bool canKeyAReadKeyATrailer() const;
     bool canKeyBReadKeyATrailer() const;
@@ -57,11 +58,6 @@ public:
 
     bool canKeyAWriteKeyBTrailer() const;
     bool canKeyBWriteKeyBTrailer() const;
-
-    static void setArrayBit(char *buf, const char &bitPosition, const bool &value);
-    static void setArrayBit(unsigned char *buf, const char &bitPosition, const bool &value);
-    static bool getArrayBit(const char *buf, const char &bitPosition);
-    static bool getArrayBit(const unsigned char *buf, const char &bitPosition);
 
 private:
     std::string _bits;

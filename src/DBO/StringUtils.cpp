@@ -46,7 +46,7 @@ std::string StringUtils::rawToHuman(long c)
     return rawToHuman((unsigned long)c);
 }
 
-std::string StringUtils::rawToHuman(std::string raw)
+std::string StringUtils::rawToHuman(const std::string& raw)
 {
     std::string human;
     for (size_t i = 0; i < raw.size(); ++i) {
@@ -55,7 +55,7 @@ std::string StringUtils::rawToHuman(std::string raw)
     return human;
 }
 
-ResultString StringUtils::humanToRaw(std::string human)
+ResultString StringUtils::humanToRaw(const std::string& human)
 {
     if (human.size() % 2 != 0) {
         return ResultString::error("Malformed hex data: invalid length");
@@ -74,7 +74,7 @@ ResultString StringUtils::humanToRaw(std::string human)
     return ResultString::ok(raw);
 }
 
-std::string StringUtils::toLower(std::string str)
+std::string StringUtils::toLower(const std::string& str)
 {
     std::string lower;
     for (size_t i = 0; i < str.size(); ++i) {
@@ -91,7 +91,7 @@ char StringUtils::toLower(char c)
     return c;
 }
 
-std::string StringUtils::toUpper(std::string str)
+std::string StringUtils::toUpper(const std::string& str)
 {
     std::string upper;
     for (size_t i = 0; i < str.size(); ++i) {
@@ -107,3 +107,19 @@ char StringUtils::toUpper(char c)
     }
     return c;
 }
+
+std::string StringUtils::ensureSize(const std::string &data, int size)
+{
+    if (data.size() >= size) {
+        return data.substr(0, size);
+    }
+    else {
+        std::string d = data;
+        while (d.size() < size) {
+            d += '\0';
+        }
+        return d;
+    }
+}
+
+

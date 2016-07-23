@@ -11,7 +11,7 @@ set(SOURCE_FILES
         DataAccess/FreeFareDevice.h
         DataAccess/FreeFareTag.cpp
         DataAccess/FreeFareTag.h
-        DBO/StringUtils.cpp DBO/StringUtils.h DBO/AccessBitsDbo.cpp DBO/AccessBitsDbo.h Business/LibNfcBusiness.cpp Business/LibNfcBusiness.h Business/NfcDeviceBusiness.cpp Business/NfcDeviceBusiness.h Business/FreeFareDeviceBusiness.cpp Business/FreeFareDeviceBusiness.h Business/FreeFareTagBusiness.cpp Business/FreeFareTagBusiness.h DataAccess/SectorDbo.cpp DataAccess/SectorDbo.h)
+        DBO/StringUtils.cpp DBO/StringUtils.h DBO/AccessBitsDbo.cpp DBO/AccessBitsDbo.h Business/LibNfcBusiness.cpp Business/LibNfcBusiness.h Business/NfcDeviceBusiness.cpp Business/NfcDeviceBusiness.h Business/FreeFareDeviceBusiness.cpp Business/FreeFareDeviceBusiness.h Business/FreeFareTagBusiness.cpp Business/FreeFareTagBusiness.h DataAccess/SectorDbo.cpp DataAccess/SectorDbo.h DBO/ArrayUtils.cpp DBO/ArrayUtils.h)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME} ${LIBS})
