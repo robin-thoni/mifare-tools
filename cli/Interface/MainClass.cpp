@@ -13,6 +13,13 @@
 #include "CommandLineParser.h"
 #include "MainClass.h"
 
+#define EX_KEY_ERROR 1
+#define EX_LIB_NFC_ERROR 2
+#define EX_NFC_DEVICE_NOT_FOUND 3
+#define EX_NFC_TAG_NOT_FOUND 4
+#define EX_MAP_KEYS_ERROR 5
+#define EX_DUMP_ERROR 6
+
 MainClass::MainClass(int argc, char *argv[])
     : _argc(argc)
     , _argv(argv)
@@ -25,30 +32,36 @@ int MainClass::main()
     CommandLineOption optionVersion(&parser, "version", 'v', "Show libnfc and mifare-tools versions");
     CommandLineOption optionHelp(&parser, "help", 'h', "Show this help");
 
-    CommandLineOption optionDevice(&parser, "device", 'd', "Use the device DEVICE", "DEVICE");
-    CommandLineOption optionUid(&parser, "uid", 'u', "Use the UID tag", "UID");
+    CommandLineOption optionMap(&parser, "map", 'm', "Map keys for the tag");
+    CommandLineOption optionDump(&parser, "dump", 'd', "Dump the tag");
+    CommandLineOption optionDevices(&parser, "devices", 'l', "List NFC devices");
+    CommandLineOption optionTags(&parser, "tags", 't', "List NFC tags");
+
+    CommandLineOption optionDevice(&parser, "device", 'e', "Use the device DEVICE", "DEVICE");
+    CommandLineOption optionTag(&parser, "tag", 'u', "Use the UID tag", "UID");
 
     CommandLineOption optionKeyFile(&parser, "key-file", 'f', "Path to a file containing keys", "FILE");
+    CommandLineOption optionKey(&parser, "key", 'k', "Key to use to authenticate", "KEY");
 
     if (!parser.parse()) {
         return parser.showHelp(EX_USAGE);
     }
     if (optionVersion.isSet()) {
         printVersion();
-        return 0;
+        return EX_OK;
     }
     if (optionHelp.isSet()) {
-        return parser.showHelp(0, false);
+        return parser.showHelp(EX_OK, false);
     }
 
     std::string deviceName = "";
-    if (!optionDevice.isSet()) {
+    if (optionDevice.isSet()) {
         deviceName = optionDevice.getValue();
     }
 
     std::string tagUid = "";
-    if (!optionUid.isSet()) {
-        tagUid = optionUid.getValue();
+    if (optionTag.isSet()) {
+        tagUid = optionTag.getValue();
     }
 
     std::vector<std::string> keys;
@@ -57,65 +70,107 @@ int MainClass::main()
             auto keysResult = readFile(filePath);
             if (!keysResult) {
                 keysResult.print();
-                return 1;
+                return EX_KEY_ERROR;
             }
             auto fileKeys = keysResult.getData();
             keys.insert(keys.end(), fileKeys.begin(), fileKeys.end());
         }
     }
+    if (optionKey.isSet()) {
+        for (auto key : optionKey.getValues()) {
+            auto keyResult = StringUtils::humanToRaw(key);
+            key = keyResult.getData();
+            if (!keyResult || key.length() != 6) {
+                std::cerr << "Invalid key" << std::endl;
+                return EX_KEY_ERROR;
+            }
+            keys.push_back(key);
+        }
+    }
 
+    int res = EX_OK;
     LibNfcBusiness libNfc;
     auto init = libNfc.init();
     if (!init) {
         init.print();
-        return 1;
+        res = EX_LIB_NFC_ERROR;
+    }
+    else
+    {
+        auto devicesResult = libNfc.getDevices();
+        if (!devicesResult)
+        {
+            devicesResult.print();
+            res = EX_LIB_NFC_ERROR;
+        }
+        else
+        {
+            auto devices = devicesResult.getData();
+
+            if (optionDevices.isSet())
+            {
+                for (auto device : devices) {
+                    std::cout << device->getConnStr() << std::endl;
+                }
+            }
+            else
+            {
+                auto device = getDevice(deviceName, devices);
+                if (device == 0)
+                {
+                    std::cerr << "NFC device not found" << std::endl;
+                    res = EX_NFC_DEVICE_NOT_FOUND;
+                }
+                else {
+                    auto open = device->open();
+                    if (!open) {
+                        open.print();
+                        res = EX_LIB_NFC_ERROR;
+                    }
+                    else {
+
+                        FreeFareDeviceBusiness freeFareDevice(device);
+                        auto tagsResult = freeFareDevice.getTags();
+                        if (!tagsResult)
+                        {
+                            tagsResult.print();
+                            res = EX_LIB_NFC_ERROR;
+                        }
+
+                        auto tags = tagsResult.getData();
+
+                        if (optionTags.isSet()) {
+                            for (auto tag : tags)
+                            {
+                                std::cout << "UID=" << tag->getUid() << " \tType=" << tag->getType() << std::endl;
+                            }
+                        }
+                        else {
+                            auto tag = getTag(tagUid, tags);
+                            if (tag == 0) {
+                                std::cerr << "Tag not found" << std::endl;
+                                res = EX_NFC_TAG_NOT_FOUND;
+                            }
+                            else {
+                                if (optionDump.isSet()) {
+                                    res = dump(tag, keys);
+                                }
+                                else if (optionMap.isSet()) {
+                                    res = mapKeys(tag, keys);
+                                }
+                                else {
+                                    std::cerr << "Must select an action (dump|map|devices|tags)" << std::endl;
+                                    res = EX_USAGE;
+                                }
+                            }
+                        }
+                    }
+                }
+                device->close();
+            }
+        }
     }
 
-    auto devicesResult = libNfc.getDevices();
-    if (!devicesResult) {
-        devicesResult.print();
-        return 2;
-    }
-    auto devices = devicesResult.getData();
-    std::shared_ptr<NfcDeviceBusiness> device = getDevice(deviceName, devices);
-    if (device == 0) {
-        std::cerr << "NFC device not found" << std::endl;
-        return 3;
-    }
-    auto open = device->open();
-    if (!open) {
-        open.print();
-        return 4;
-    }
-
-    FreeFareDeviceBusiness freeFareDevice(device);
-    auto tagsResult = freeFareDevice.getTags();
-    if (!tagsResult) {
-        tagsResult.print();
-        return 5;
-    }
-
-    auto tags = tagsResult.getData();
-    if (tags.size() == 0) {
-        std::cerr << "No tag found" << std::endl;
-        return 6;
-    }
-
-    auto tag = getTag(tagUid, tags);
-    if (tag == 0) {
-        std::cerr << "Tag not found" << std::endl;
-        return 6;
-    }
-
-//    std::vector<std::string> keys;
-//    keys.push_back(StringUtils::humanToRaw("8829da9daf76").getData());
-//    keys.push_back(StringUtils::humanToRaw("ffffffffffff").getData());
-    keys.push_back(StringUtils::humanToRaw("484558414354").getData());
-
-    int res = dump(tag, keys);
-//    int res = mapKeys(tag, keys);
-
-    device->close();
     libNfc.clean();
 
     return res;
@@ -129,6 +184,7 @@ int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std
     }
     if (!mappedKeysResult) {
         mappedKeysResult.print();
+        return EX_MAP_KEYS_ERROR;
     }
     else {
         auto mappedKeys = mappedKeysResult.getData();
@@ -137,12 +193,12 @@ int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std
             std::cout << "+Sector: " << s << std::endl;
             for (int b = 0; b < 4; ++b) {
                 std::cout << "+Block: " << b << std::endl;
-                std::cout << "Key A: " << StringUtils::rawToHuman(sectorKey.first) << std::endl;
-                std::cout << "Key B: " << StringUtils::rawToHuman(sectorKey.second) << std::endl;
+                std::cout << "Key A: " << (!sectorKey.first.empty() ? StringUtils::rawToHuman(sectorKey.first) : std::string(12, '-')) << std::endl;
+                std::cout << "Key B: " << (!sectorKey.second.empty() ? StringUtils::rawToHuman(sectorKey.second) : std::string(12, '-')) << std::endl;
             }
         }
     }
-    return 0;
+    return EX_OK;
 }
 
 int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
@@ -153,7 +209,7 @@ int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::s
     }
     if (!dumpResult) {
         dumpResult.print();
-        return 7;
+        return EX_DUMP_ERROR;
     }
     auto dump = dumpResult.getData();
     for(int s = 0; s < 16; ++s) {
@@ -178,7 +234,7 @@ int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::s
         std::cout << "+Block: 4 ";
         printTrailerAccessBits(accessBitsDbo);
     }
-    return 0;
+    return EX_OK;
 }
 
 void MainClass::printBlockAccessBits(const AccessBitsDbo &accessBits, int block)
