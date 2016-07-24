@@ -35,7 +35,6 @@ ResultBool FreeFareTag::authenticate(int sector, std::string key, int keyType)
 
 ResultString FreeFareTag::readBlock(int sector, int block, std::string key, int keyType)
 {
-
     if (mifare_classic_connect(_tag) != 0) {
         return ResultString::error("Failed to connect to MIFARE tag");
     }
@@ -51,6 +50,24 @@ ResultString FreeFareTag::readBlock(int sector, int block, std::string key, int 
     }
     mifare_classic_disconnect(_tag);
     return ResultString::ok(std::string((const char*)data, sizeof(data)));
+}
+
+ResultBool FreeFareTag::writeBlock(int sector, int block, std::string key, int keyType, const std::string &data)
+{
+    if (mifare_classic_connect(_tag) != 0) {
+        return ResultBool::error("Failed to connect to MIFARE tag");
+    }
+    block = mifare_classic_sector_first_block((MifareClassicBlockNumber)sector) + block;
+    if (mifare_classic_authenticate(_tag, (MifareClassicBlockNumber)block, (const unsigned char*)key.c_str(),
+                                    (MifareClassicKeyType)keyType) != 0) {
+        return ResultBool::error("Failed to authenticate to MIFARE tag");
+    }
+
+    if (mifare_classic_write(_tag, (MifareClassicBlockNumber)block, (const unsigned char*)data.c_str())) {
+        return ResultBool::error("Failed to write data to MIFARE tag");
+    }
+    mifare_classic_disconnect(_tag);
+    return ResultBool::ok(true);
 }
 
 const freefare_tag *FreeFareTag::getTag() const

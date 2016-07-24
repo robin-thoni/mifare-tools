@@ -20,6 +20,8 @@ public:
 
     ResultString readBlock(int sector, int block, std::string key, int keyType);
 
+    ResultBool writeBlock(int sector, int block, std::string key, int keyType, const std::string& data);
+
     int getFirstBlock(int sector) const;
 
     int getLastBlock(int sector) const;

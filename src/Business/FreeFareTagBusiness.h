@@ -19,15 +19,25 @@ public:
 
     ResultBool authenticate(int sector, std::string key, int keyType);
 
+    Result<MappedKeys> mapKeys(std::vector<std::string> keys, std::function<void(int, int)> cb = 0);
+
     ResultString readBlock(int sector, int block, std::string key, int keyType);
 
     Result<SectorDbo> readSector(int sector, std::string key, int keyType);
 
-    Result<MappedKeys> mapKeys(std::vector<std::string> keys, std::function<void(int, int)> cb = 0);
+    Result<std::vector<SectorDbo>> read(MappedKeys keys, std::function<void(int, int)> cb = 0);
 
-    Result<std::vector<SectorDbo>> dump(MappedKeys keys, std::function<void(int, int)> cb  = 0);
+    Result<std::vector<SectorDbo>> read(std::vector<std::string> keys, std::function<void(int, int)> mapCb = 0,
+                                        std::function<void(int, int)> dumpCb = 0);
 
-    Result<std::vector<SectorDbo>> dump(std::vector<std::string> keys, std::function<void(int, int)> mapCb = 0, std::function<void(int, int)> dumpCb = 0);
+    ResultBool writeBlock(int sector, int block, std::string key, int keyType, const std::string& data);
+
+    ResultBool writeSector(int sector, std::string key, int keyType, const std::string& data);
+
+    ResultBool write(MappedKeys keys, const std::string& data, bool writeSector0, std::function<void(int, int)> cb = 0);
+
+    ResultBool write(std::vector<std::string> keys, const std::string& data, bool writeSector0,
+                     std::function<void(int, int)> mapCb = 0, std::function<void(int, int)> dumpCb = 0);
 
     const std::string& getUid() const;
 

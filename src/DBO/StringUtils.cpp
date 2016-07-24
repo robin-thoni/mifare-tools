@@ -111,15 +111,14 @@ char StringUtils::toUpper(char c)
 
 std::string StringUtils::ensureSize(const std::string &data, int size)
 {
-    if (data.size() >= size) {
+    if (data.size() == size) {
+        return data;
+    }
+    else if (data.size() > size) {
         return data.substr(0, size);
     }
     else {
-        std::string d = data;
-        while (d.size() < size) {
-            d += '\0';
-        }
-        return d;
+        return data + std::string(size - data.size(), '\0');
     }
 }
 

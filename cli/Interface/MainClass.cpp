@@ -34,8 +34,8 @@ int MainClass::main()
     CommandLineOption optionHelp(&parser, "help", 'h', "Show this help");
 
     CommandLineOption optionMap(&parser, "map", 'm', "Map keys for the tag");
-    CommandLineOption optionDump(&parser, "dump", 'd', "Dump the tag");
-    CommandLineOption optionDevices(&parser, "devices", 'l', "List NFC devices");
+    CommandLineOption optionDump(&parser, "read", 'r', "Read the tag");
+    CommandLineOption optionDevices(&parser, "devices", 'd', "List NFC devices");
     CommandLineOption optionTags(&parser, "tags", 't', "List NFC tags");
 
     CommandLineOption optionDevice(&parser, "device", 'e', "Use the device DEVICE", "DEVICE");
@@ -178,7 +178,7 @@ int MainClass::main()
                                     res = mapKeys(tag, keys);
                                 }
                                 else {
-                                    std::cerr << "Must select an action (map|dump|devices|tags)" << std::endl;
+                                    std::cerr << "Must select an action (map|read|devices|tags)" << std::endl;
                                     res = EX_USAGE;
                                 }
                             }
@@ -218,7 +218,7 @@ int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std
 
 int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
-    auto dumpResult = tag->dump(keys, printPercentMapKeys, printPercentDump);
+    auto dumpResult = tag->read(keys, printPercentMapKeys, printPercentDump);
     if (!dumpResult) {
         dumpResult.print();
         return EX_DUMP_ERROR;
