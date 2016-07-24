@@ -28,7 +28,7 @@ public:
     Result<std::vector<SectorDbo>> read(MappedKeys keys, std::function<void(int, int)> cb = 0);
 
     Result<std::vector<SectorDbo>> read(std::vector<std::string> keys, std::function<void(int, int)> mapCb = 0,
-                                        std::function<void(int, int)> dumpCb = 0);
+                                        std::function<void(int, int)> readCb = 0);
 
     ResultBool writeBlock(int sector, int block, std::string key, int keyType, const std::string& data);
 
@@ -37,7 +37,7 @@ public:
     ResultBool write(MappedKeys keys, const std::string& data, bool writeSector0, std::function<void(int, int)> cb = 0);
 
     ResultBool write(std::vector<std::string> keys, const std::string& data, bool writeSector0,
-                     std::function<void(int, int)> mapCb = 0, std::function<void(int, int)> dumpCb = 0);
+                     std::function<void(int, int)> mapCb = 0, std::function<void(int, int)> writeCb = 0);
 
     const std::string& getUid() const;
 

@@ -151,13 +151,13 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::read(MappedKeys keys, std::f
 }
 
 Result<std::vector<SectorDbo>> FreeFareTagBusiness::read(std::vector<std::string> keys, std::function<void(int, int)> mapCb,
-                                                         std::function<void(int, int)> dumpCb)
+                                                         std::function<void(int, int)> readCb)
 {
     auto mappedKeysResult = mapKeys(keys, mapCb);
     if (!mappedKeysResult) {
         return Result<std::vector<SectorDbo>>::error(mappedKeysResult);
     }
-    return read(mappedKeysResult.getData(), dumpCb);
+    return read(mappedKeysResult.getData(), readCb);
 }
 
 ResultBool FreeFareTagBusiness::writeBlock(int sector, int block, std::string key, int keyType, const std::string &data)
@@ -236,13 +236,13 @@ ResultBool FreeFareTagBusiness::write(MappedKeys keys, const std::string &data, 
 }
 
 ResultBool FreeFareTagBusiness::write(std::vector<std::string> keys, const std::string &data, bool writeSector0,
-                                      std::function<void(int, int)> mapCb, std::function<void(int, int)> dumpCb)
+                                      std::function<void(int, int)> mapCb, std::function<void(int, int)> writeCb)
 {
     auto mappedKeysResult = mapKeys(keys, mapCb);
     if (!mappedKeysResult) {
         return ResultBool::error(mappedKeysResult);
     }
-    return write(mappedKeysResult.getData(), data, writeSector0, dumpCb);
+    return write(mappedKeysResult.getData(), data, writeSector0, writeCb);
 }
 
 const std::string &FreeFareTagBusiness::getUid() const

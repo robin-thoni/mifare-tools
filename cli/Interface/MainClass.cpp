@@ -13,13 +13,15 @@
 #include "CommandLineParser.h"
 #include "MainClass.h"
 
-#define EX_REDIRECT_ERROR 1
+#define EX_OUTPUT_ERROR 1
+#define EX_INPUT_ERROR 2
 #define EX_KEY_ERROR 10
 #define EX_LIB_NFC_ERROR 12
 #define EX_NFC_DEVICE_NOT_FOUND 13
 #define EX_NFC_TAG_NOT_FOUND 14
 #define EX_MAP_KEYS_ERROR 15
-#define EX_DUMP_ERROR 16
+#define EX_READ_ERROR 16
+#define EX_WRITE_ERROR 17
 
 MainClass::MainClass(int argc, char *argv[])
     : _argc(argc)
@@ -34,7 +36,8 @@ int MainClass::main()
     CommandLineOption optionHelp(&parser, "help", 'h', "Show this help");
 
     CommandLineOption optionMap(&parser, "map", 'm', "Map keys for the tag");
-    CommandLineOption optionDump(&parser, "read", 'r', "Read the tag");
+    CommandLineOption optionRead(&parser, "read", 'r', "Read the tag");
+    CommandLineOption optionWrite(&parser, "write", 'w', "Write the tag");
     CommandLineOption optionDevices(&parser, "devices", 'd', "List NFC devices");
     CommandLineOption optionTags(&parser, "tags", 't', "List NFC tags");
 
@@ -45,6 +48,7 @@ int MainClass::main()
     CommandLineOption optionKey(&parser, "key", 'k', "Key to use to authenticate", "KEY");
 
     CommandLineOption optionOutput(&parser, "output", 'o', "Redirect output to FILE. '-' to use stdout", "FILE", "-");
+    CommandLineOption optionInput(&parser, "input", 'i', "Read input from FILE. '-' to use stdin", "FILE", "-");
 
     if (!parser.parse()) {
         return parser.showHelp(EX_USAGE);
@@ -54,15 +58,28 @@ int MainClass::main()
         outputFile = optionOutput.getValue();
     }
 
-    std::shared_ptr<std::ofstream> fileCout = 0;
     if (outputFile != "-" && !outputFile.empty()) {
-        fileCout = std::make_shared<std::ofstream>();
+        std::shared_ptr<std::ofstream> fileCout = std::make_shared<std::ofstream>();
         fileCout->open(outputFile);
         if (!*fileCout) {
             std::cerr << "Failed to redirect output: " << strerror(errno) << std::endl;
-            return EX_REDIRECT_ERROR;
+            return EX_OUTPUT_ERROR;
         }
         _outputStream = fileCout;
+    }
+
+    std::string inputFile = optionInput.getDefaultValue();
+    if (optionInput.isSet()) {
+        inputFile = optionInput.getValue();
+    }
+    if (inputFile != "-" && !inputFile.empty()) {
+        std::shared_ptr<std::ifstream> fileCin = std::make_shared<std::ifstream>();
+        fileCin->open(inputFile);
+        if (!*fileCin) {
+            std::cerr << "Failed to open input file: " << strerror(errno) << std::endl;
+            return EX_INPUT_ERROR;
+        }
+        _inputStream = fileCin;
     }
 
     if (optionVersion.isSet()) {
@@ -107,7 +124,32 @@ int MainClass::main()
         }
     }
 
+    std::string inputData = "";
+
     int res = EX_OK;
+    Actions action;
+    if (optionRead.isSet()) {
+        action = Read;
+    }
+    else if (optionMap.isSet()) {
+        action = Map;
+    }
+    else if (optionWrite.isSet()) {
+        auto readResult = readStream(cin());
+        if (!readResult) {
+            readResult.print();
+            return EX_INPUT_ERROR;
+        }
+        for (auto data : readResult.getData()) {
+            inputData += data;
+        }
+        action = Write;
+    }
+    else {
+        std::cerr << "Must select an action (map|read|write|devices|tags)" << std::endl;
+        return EX_USAGE;
+    }
+
     LibNfcBusiness libNfc;
     auto init = libNfc.init();
     if (!init) {
@@ -171,15 +213,14 @@ int MainClass::main()
                                 res = EX_NFC_TAG_NOT_FOUND;
                             }
                             else {
-                                if (optionDump.isSet()) {
-                                    res = dump(tag, keys);
+                                if (action == Read) {
+                                    res = read(tag, keys);
                                 }
-                                else if (optionMap.isSet()) {
+                                else if (action == Map) {
                                     res = mapKeys(tag, keys);
                                 }
-                                else {
-                                    std::cerr << "Must select an action (map|read|devices|tags)" << std::endl;
-                                    res = EX_USAGE;
+                                else if (action == Write) {
+                                    res = write(tag, keys, inputData);
                                 }
                             }
                         }
@@ -191,6 +232,12 @@ int MainClass::main()
         libNfc.clean();
     }
 
+    if (_outputStream != 0) {
+        _outputStream->close();
+    }
+    if (_inputStream != 0) {
+        _inputStream->close();
+    }
     return res;
 }
 
@@ -216,17 +263,40 @@ int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std
     return EX_OK;
 }
 
-int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
+int MainClass::read(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
-    auto dumpResult = tag->read(keys, printPercentMapKeys, printPercentDump);
-    if (!dumpResult) {
-        dumpResult.print();
-        return EX_DUMP_ERROR;
+    auto readResult = tag->read(keys, printPercentMapKeys, printPercentDump);
+    if (!readResult) {
+        readResult.print();
+        return EX_READ_ERROR;
     }
-    auto dump = dumpResult.getData();
-    for(int s = 0; s < 16; ++s) {
+    auto read = readResult.getData();
+    printSectors(read);
+    return EX_OK;
+}
+
+int MainClass::write(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys, const std::string &data)
+{
+    auto writeResult = tag->write(keys, data, false, printPercentMapKeys, printPercentWrite);
+    if (!writeResult) {
+        writeResult.print();
+        return EX_WRITE_ERROR;
+    }
+//    std::vector<SectorDbo> sectors;
+//    std::string d = StringUtils::ensureSize(data, 1024);
+//    for (int i = 0; i < 16; ++i) {
+//        SectorDbo sectorDbo(d.substr(i * 64, 64));
+//        sectors.push_back(sectorDbo);
+//    }
+//    printSectors(sectors);
+    return EX_OK;
+}
+
+void MainClass::printSectors(const std::vector<SectorDbo> &sectors)
+{
+    for(int s = 0; s < sectors.size(); ++s) {
         cout() << "+Sector: " << s << std::endl;
-        auto sector = dump[s];
+        auto sector = sectors[s];
         for (int b = 0; b < 3; ++b) {
             cout() << (sector.hasBlock(b) ? StringUtils::rawToHuman(sector.getBlock(b)) : std::string(32, '-')) << std::endl;
         }
@@ -236,8 +306,8 @@ int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::s
 
 
         cout() << "+Trailer key A: " << (sector.hasKeyA() ? StringUtils::rawToHuman(sector.getKeyA()) : std::string(12, '-'))
-            << "\t AC bits: " << (sector.hasAccessBits() ? StringUtils::rawToHuman(sector.getAccessBits()) : std::string(8, '-'))
-            << "\t key B: " << (sector.hasKeyB() ? StringUtils::rawToHuman(sector.getKeyB()) : std::string(12, '-')) << std::endl;
+        << "\t AC bits: " << (sector.hasAccessBits() ? StringUtils::rawToHuman(sector.getAccessBits()) : std::string(8, '-'))
+        << "\t key B: " << (sector.hasKeyB() ? StringUtils::rawToHuman(sector.getKeyB()) : std::string(12, '-')) << std::endl;
         AccessBitsDbo accessBitsDbo = sector.getAccessBitsDbo();
         for (int b = 0; b < 3; ++b) {
             cout() << "+Block: " << b << " ";
@@ -246,7 +316,6 @@ int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::s
         cout() << "+Block: 3 ";
         printTrailerAccessBits(accessBitsDbo);
     }
-    return EX_OK;
 }
 
 void MainClass::printBlockAccessBits(const AccessBitsDbo &accessBits, int block)
@@ -288,6 +357,11 @@ void MainClass::printPercentMapKeys(int done, int total)
 void MainClass::printPercentDump(int done, int total)
 {
     printPercent(done, total, "Dumping");
+}
+
+void MainClass::printPercentWrite(int done, int total)
+{
+    printPercent(done, total, "Writing");
 }
 
 void MainClass::printVersion()
@@ -333,25 +407,31 @@ std::shared_ptr<FreeFareTagBusiness> MainClass::getTag(const std::string &tagUid
 
 Result<std::vector<std::string>> MainClass::readFile(const std::string &filePath)
 {
-    std::vector<std::string> lines;
     std::ifstream fileInput(filePath);
     if (fileInput) {
-        while (!fileInput.eof()) {
-            std::string line;
-            std::getline(fileInput, line);
-            line = StringUtils::removeSpaces(line);
-            if (line.compare(0, 1, "#") != 0 && line.compare(0, 1, "+") != 0) {
-                auto keyResult = StringUtils::humanToRaw(line);
-                if (!keyResult) {
-                    return Result<std::vector<std::string>>::error("Invalid file data");
-                }
-                line = keyResult.getData();
-                lines.push_back(line);
-            }
-        }
+        return readStream(fileInput);
     }
     else {
         return Result<std::vector<std::string>>::error("Failed to open file: " + std::string(strerror(errno)));
+    }
+}
+
+Result<std::vector<std::string>> MainClass::readStream(std::istream &stream)
+{
+    std::vector<std::string> lines;
+    while (!stream.eof()) {
+        std::string line;
+        std::getline(stream, line);
+        line = StringUtils::removeSpaces(line);
+        if (line.compare(0, 1, "#") != 0 && line.compare(0, 1, "+") != 0) {
+            std::replace(line.begin(), line.end(), '-', '0');
+            auto keyResult = StringUtils::humanToRaw(line);
+            if (!keyResult) {
+                return Result<std::vector<std::string>>::error("Invalid data");
+            }
+            line = keyResult.getData();
+            lines.push_back(line);
+        }
     }
     return Result<std::vector<std::string>>::ok(lines);
 }
@@ -359,4 +439,9 @@ Result<std::vector<std::string>> MainClass::readFile(const std::string &filePath
 std::ostream &MainClass::cout()
 {
     return _outputStream == 0 ? std::cout : *_outputStream;
+}
+
+std::istream &MainClass::cin()
+{
+    return _inputStream == 0 ? std::cin : *_inputStream;
 }

@@ -46,7 +46,7 @@ public:
 protected:
     std::string _blocks[4];
 
-    bool _haveBlocks[3];
+    bool _haveBlocks[4];
 
     bool _hasKeyA;
 
