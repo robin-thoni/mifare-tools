@@ -53,6 +53,8 @@ std::shared_ptr<FreeFareTag> FreeFareTagBusiness::getTag() const
 Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys, std::function<void(int, int)> cb)
 {
     MappedKeys mappedKeys;
+    int done = 0;
+    int total = 16 * keys.size();
 
     for (int i = 0; i < 16; ++i) {
         std::pair<std::string, std::string> blockKeys;
@@ -65,7 +67,7 @@ Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys, s
                 blockKeys.second = key;
             }
             if (cb != 0) {
-                cb((i * keys.size()) + k + 1, 16 * keys.size());
+                cb(++done, total);
             }
             if (!blockKeys.first.empty() && !blockKeys.second.empty()) {
                 break;
@@ -73,8 +75,8 @@ Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys, s
         }
         mappedKeys.push_back(blockKeys);
     }
-    if (cb != 0) {
-        cb(16 * keys.size(), 16 * keys.size());
+    if (cb != 0 && done < total) {
+        cb(total, total);
     }
 
     return Result<MappedKeys>::ok(mappedKeys);
@@ -85,6 +87,8 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::f
     if (keys.size() != 16) {
         return Result<std::vector<SectorDbo>>::error("Must have 16 sectors");
     }
+    int done = 0;
+    int total = 4 * keys.size();
     std::vector<SectorDbo> sectors;
     for (int s = 0; s < keys.size(); ++s) {
         auto sectorKey = keys[s];
@@ -111,7 +115,7 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::f
             }
             sector.setBlock(b, data);
             if (cb != 0) {
-                cb((s * 4) + b + 1, keys.size() * 4);
+                cb(++done, total);
             }
         }
         int b = 3;
@@ -132,7 +136,7 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::f
             }
         }
         if (cb != 0) {
-            cb((s * 4) + b + 1, keys.size() * 4);
+            cb(++done, total);
         }
 
         sector.setBlock(b, dataA);
@@ -152,6 +156,9 @@ Result<std::vector<SectorDbo>> FreeFareTagBusiness::dump(MappedKeys keys, std::f
         sector.setAccessBits(accessBits);
 
         sectors.push_back(sector);
+    }
+    if (cb != 0 && done < total) {
+        cb(total, total);
     }
 
     return Result<std::vector<SectorDbo>>::ok(sectors);
