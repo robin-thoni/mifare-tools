@@ -13,12 +13,13 @@
 #include "CommandLineParser.h"
 #include "MainClass.h"
 
-#define EX_KEY_ERROR 1
-#define EX_LIB_NFC_ERROR 2
-#define EX_NFC_DEVICE_NOT_FOUND 3
-#define EX_NFC_TAG_NOT_FOUND 4
-#define EX_MAP_KEYS_ERROR 5
-#define EX_DUMP_ERROR 6
+#define EX_REDIRECT_ERROR 1
+#define EX_KEY_ERROR 10
+#define EX_LIB_NFC_ERROR 12
+#define EX_NFC_DEVICE_NOT_FOUND 13
+#define EX_NFC_TAG_NOT_FOUND 14
+#define EX_MAP_KEYS_ERROR 15
+#define EX_DUMP_ERROR 16
 
 MainClass::MainClass(int argc, char *argv[])
     : _argc(argc)
@@ -43,9 +44,26 @@ int MainClass::main()
     CommandLineOption optionKeyFile(&parser, "key-file", 'f', "Path to a file containing keys", "FILE");
     CommandLineOption optionKey(&parser, "key", 'k', "Key to use to authenticate", "KEY");
 
+    CommandLineOption optionOutput(&parser, "output", 'o', "Redirect output to FILE. '-' to use stdout", "FILE");
+
     if (!parser.parse()) {
         return parser.showHelp(EX_USAGE);
     }
+    std::string outputFile = "-";
+    if (optionOutput.isSet()) {
+        outputFile = optionOutput.getValue();
+    }
+    std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
+    std::ofstream fileCout;
+    if (outputFile != "-" && !outputFile.empty()) {
+        fileCout.open(outputFile);
+        if (!fileCout) {
+            std::cerr << "Failed to redirect output: " << strerror(errno) << std::endl;
+            return EX_REDIRECT_ERROR;
+        }
+        std::cout.rdbuf(fileCout.rdbuf());
+    }
+
     if (optionVersion.isSet()) {
         printVersion();
         return EX_OK;
@@ -159,20 +177,23 @@ int MainClass::main()
                                     res = mapKeys(tag, keys);
                                 }
                                 else {
-                                    std::cerr << "Must select an action (dump|map|devices|tags)" << std::endl;
+                                    std::cerr << "Must select an action (map|dump|devices|tags)" << std::endl;
                                     res = EX_USAGE;
                                 }
                             }
                         }
                     }
+                    device->close();
                 }
-                device->close();
             }
         }
     }
 
     libNfc.clean();
-
+    std::cout.rdbuf(oldCoutStreamBuf);
+    if (fileCout) {
+        fileCout.close();
+    }
     return res;
 }
 
