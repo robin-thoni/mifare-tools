@@ -73,6 +73,9 @@ Result<MappedKeys> FreeFareTagBusiness::mapKeys(std::vector<std::string> keys, s
         }
         mappedKeys.push_back(blockKeys);
     }
+    if (cb != 0) {
+        cb(16 * keys.size(), 16 * keys.size());
+    }
 
     return Result<MappedKeys>::ok(mappedKeys);
 }

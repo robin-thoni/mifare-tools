@@ -44,24 +44,25 @@ int MainClass::main()
     CommandLineOption optionKeyFile(&parser, "key-file", 'f', "Path to a file containing keys", "FILE");
     CommandLineOption optionKey(&parser, "key", 'k', "Key to use to authenticate", "KEY");
 
-    CommandLineOption optionOutput(&parser, "output", 'o', "Redirect output to FILE. '-' to use stdout", "FILE");
+    CommandLineOption optionOutput(&parser, "output", 'o', "Redirect output to FILE. '-' to use stdout", "FILE", "-");
 
     if (!parser.parse()) {
         return parser.showHelp(EX_USAGE);
     }
-    std::string outputFile = "-";
+    std::string outputFile = optionOutput.getDefaultValue();
     if (optionOutput.isSet()) {
         outputFile = optionOutput.getValue();
     }
-    std::streambuf* oldCoutStreamBuf = std::cout.rdbuf();
-    std::ofstream fileCout;
+
+    std::shared_ptr<std::ofstream> fileCout = 0;
     if (outputFile != "-" && !outputFile.empty()) {
-        fileCout.open(outputFile);
-        if (!fileCout) {
+        fileCout = std::make_shared<std::ofstream>();
+        fileCout->open(outputFile);
+        if (!*fileCout) {
             std::cerr << "Failed to redirect output: " << strerror(errno) << std::endl;
             return EX_REDIRECT_ERROR;
         }
-        std::cout.rdbuf(fileCout.rdbuf());
+        _outputStream = fileCout;
     }
 
     if (optionVersion.isSet()) {
@@ -72,12 +73,12 @@ int MainClass::main()
         return parser.showHelp(EX_OK, false);
     }
 
-    std::string deviceName = "";
+    std::string deviceName = optionDevice.getDefaultValue();
     if (optionDevice.isSet()) {
         deviceName = optionDevice.getValue();
     }
 
-    std::string tagUid = "";
+    std::string tagUid = optionTag.getDefaultValue();
     if (optionTag.isSet()) {
         tagUid = optionTag.getValue();
     }
@@ -128,7 +129,7 @@ int MainClass::main()
             if (optionDevices.isSet())
             {
                 for (auto device : devices) {
-                    std::cout << device->getConnStr() << std::endl;
+                    cout() << device->getConnStr() << std::endl;
                 }
             }
             else
@@ -160,7 +161,7 @@ int MainClass::main()
                         if (optionTags.isSet()) {
                             for (auto tag : tags)
                             {
-                                std::cout << "UID=" << tag->getUid() << " \tType=" << tag->getType() << std::endl;
+                                cout() << "UID=" << tag->getUid() << " \tType=" << tag->getType() << std::endl;
                             }
                         }
                         else {
@@ -187,22 +188,15 @@ int MainClass::main()
                 }
             }
         }
+        libNfc.clean();
     }
 
-    libNfc.clean();
-    std::cout.rdbuf(oldCoutStreamBuf);
-    if (fileCout) {
-        fileCout.close();
-    }
     return res;
 }
 
 int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
     auto mappedKeysResult = tag->mapKeys(keys, printPercentMapKeys);
-    if (isatty(1)) {
-        std::cout << "\r";
-    }
     if (!mappedKeysResult) {
         mappedKeysResult.print();
         return EX_MAP_KEYS_ERROR;
@@ -211,11 +205,11 @@ int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std
         auto mappedKeys = mappedKeysResult.getData();
         for (int s = 0; s < mappedKeys.size(); ++s) {
             auto sectorKey = mappedKeys[s];
-            std::cout << "+Sector: " << s << std::endl;
+            cout() << "+Sector: " << s << std::endl;
             for (int b = 0; b < 4; ++b) {
-                std::cout << "+Block: " << b << std::endl;
-                std::cout << "Key A: " << (!sectorKey.first.empty() ? StringUtils::rawToHuman(sectorKey.first) : std::string(12, '-')) << std::endl;
-                std::cout << "Key B: " << (!sectorKey.second.empty() ? StringUtils::rawToHuman(sectorKey.second) : std::string(12, '-')) << std::endl;
+                cout() << "+Block: " << b << std::endl;
+                cout() << "+Key: A" << std::endl << (!sectorKey.first.empty() ? StringUtils::rawToHuman(sectorKey.first) : std::string(12, '-')) << std::endl;
+                cout() << "+Key: B" << std::endl << (!sectorKey.second.empty() ? StringUtils::rawToHuman(sectorKey.second) : std::string(12, '-')) << std::endl;
             }
         }
     }
@@ -225,34 +219,31 @@ int MainClass::mapKeys(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std
 int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::string> keys)
 {
     auto dumpResult = tag->dump(keys, printPercentMapKeys, printPercentDump);
-    if (isatty(1)) {
-        std::cout << "\r";
-    }
     if (!dumpResult) {
         dumpResult.print();
         return EX_DUMP_ERROR;
     }
     auto dump = dumpResult.getData();
     for(int s = 0; s < 16; ++s) {
-        std::cout << "+Sector: " << s << std::endl;
+        cout() << "+Sector: " << s << std::endl;
         auto sector = dump[s];
         for (int b = 0; b < 3; ++b) {
-            std::cout << (sector.hasBlock(b) ? StringUtils::rawToHuman(sector.getBlock(b)) : std::string(32, '-')) << std::endl;
+            cout() << (sector.hasBlock(b) ? StringUtils::rawToHuman(sector.getBlock(b)) : std::string(32, '-')) << std::endl;
         }
-        std::cout << "" << (sector.hasKeyA() ? StringUtils::rawToHuman(sector.getKeyA()) : std::string(12, '-'))
+        cout() << (sector.hasKeyA() ? StringUtils::rawToHuman(sector.getKeyA()) : std::string(12, '-'))
         << (sector.hasAccessBits() ? StringUtils::rawToHuman(sector.getAccessBits()) : std::string(8, '-'))
         << (sector.hasKeyB() ? StringUtils::rawToHuman(sector.getKeyB()) : std::string(12, '-')) << std::endl;
 
 
-        std::cout << "+Trailer key A: " << (sector.hasKeyA() ? StringUtils::rawToHuman(sector.getKeyA()) : std::string(12, '-'))
+        cout() << "+Trailer key A: " << (sector.hasKeyA() ? StringUtils::rawToHuman(sector.getKeyA()) : std::string(12, '-'))
             << "\t AC bits: " << (sector.hasAccessBits() ? StringUtils::rawToHuman(sector.getAccessBits()) : std::string(8, '-'))
             << "\t key B: " << (sector.hasKeyB() ? StringUtils::rawToHuman(sector.getKeyB()) : std::string(12, '-')) << std::endl;
         AccessBitsDbo accessBitsDbo = sector.getAccessBitsDbo();
         for (int b = 0; b < 3; ++b) {
-            std::cout << "+Block: " << b << " ";
+            cout() << "+Block: " << b << " ";
             printBlockAccessBits(accessBitsDbo, b);
         }
-        std::cout << "+Block: 4 ";
+        cout() << "+Block: 3 ";
         printTrailerAccessBits(accessBitsDbo);
     }
     return EX_OK;
@@ -260,31 +251,33 @@ int MainClass::dump(std::shared_ptr<FreeFareTagBusiness> tag, std::vector<std::s
 
 void MainClass::printBlockAccessBits(const AccessBitsDbo &accessBits, int block)
 {
-    std::cout << "read: " << (accessBits.canKeyAReadBlock(block) ? "A" : " ") << (accessBits.canKeyBReadBlock(block) ? "B" : " ");
-    std::cout << "\t write: " << (accessBits.canKeyAWriteBlock(block) ? "A" : " ") << (accessBits.canKeyBWriteBlock(block) ? "B" : " ");
-    std::cout << "\t increment: " << (accessBits.canKeyAIncrementBlock(block) ? "A" : " ") << (accessBits.canKeyBIncrementBlock(block) ? "B" : " ");
-    std::cout << "\t decrement: " << (accessBits.canKeyADecrementBlock(block) ? "A" : " ") << (accessBits.canKeyBDecrementBlock(block) ? "B" : " ") << std::endl;
+    cout() << "read: " << (accessBits.canKeyAReadBlock(block) ? "A" : " ") << (accessBits.canKeyBReadBlock(block) ? "B" : " ");
+    cout() << "\t write: " << (accessBits.canKeyAWriteBlock(block) ? "A" : " ") << (accessBits.canKeyBWriteBlock(block) ? "B" : " ");
+    cout() << "\t increment: " << (accessBits.canKeyAIncrementBlock(block) ? "A" : " ") << (accessBits.canKeyBIncrementBlock(block) ? "B" : " ");
+    cout() << "\t decrement: " << (accessBits.canKeyADecrementBlock(block) ? "A" : " ") << (accessBits.canKeyBDecrementBlock(block) ? "B" : " ") << std::endl;
 }
 
 void MainClass::printTrailerAccessBits(const AccessBitsDbo &accessBits)
 {
-    std::cout << "key A read: " << (accessBits.canKeyAReadKeyATrailer() ? "A" : " ") << (accessBits.canKeyBReadKeyATrailer() ? "B" : " ");
-    std::cout << "\t key A write: " << (accessBits.canKeyAWriteKeyATrailer() ? "A" : " ") << (accessBits.canKeyBWriteKeyATrailer() ? "B" : " ");
+    cout() << "key A read: " << (accessBits.canKeyAReadKeyATrailer() ? "A" : " ") << (accessBits.canKeyBReadKeyATrailer() ? "B" : " ");
+    cout() << "\t key A write: " << (accessBits.canKeyAWriteKeyATrailer() ? "A" : " ") << (accessBits.canKeyBWriteKeyATrailer() ? "B" : " ");
 
-    std::cout << "\t AC bits read: " << (accessBits.canKeyAReadAccessBitsTrailer() ? "A" : " ") << (accessBits.canKeyBReadAccessBitsTrailer() ? "B" : " ");
-    std::cout << "\t AC bits write: " << (accessBits.canKeyAWriteAccessBitsTrailer() ? "A" : " ") << (accessBits.canKeyBWriteAccessBitsTrailer() ? "B" : " ");
+    cout() << "\t AC bits read: " << (accessBits.canKeyAReadAccessBitsTrailer() ? "A" : " ") << (accessBits.canKeyBReadAccessBitsTrailer() ? "B" : " ");
+    cout() << "\t AC bits write: " << (accessBits.canKeyAWriteAccessBitsTrailer() ? "A" : " ") << (accessBits.canKeyBWriteAccessBitsTrailer() ? "B" : " ");
 
-    std::cout << "\t key B read: " << (accessBits.canKeyAReadKeyBTrailer() ? "A" : " ") << (accessBits.canKeyBReadKeyBTrailer() ? "B" : " ");
-    std::cout << "\t key B write: " << (accessBits.canKeyAWriteKeyBTrailer() ? "A" : " ") << (accessBits.canKeyBWriteKeyBTrailer() ? "B" : " ") << std::endl;;
+    cout() << "\t key B read: " << (accessBits.canKeyAReadKeyBTrailer() ? "A" : " ") << (accessBits.canKeyBReadKeyBTrailer() ? "B" : " ");
+    cout() << "\t key B write: " << (accessBits.canKeyAWriteKeyBTrailer() ? "A" : " ") << (accessBits.canKeyBWriteKeyBTrailer() ? "B" : " ") << std::endl;;
 }
 
 void MainClass::printPercent(int done, int total, const std::string& header)
 {
-    if (isatty(1)) {
+    if (isatty(fileno(stdout))) {
         std::cout << "\r\033[2K" << header << ": " << std::fixed << std::setprecision(1)
         << ((float) done / (float) total * 100.0) << "%" << std::flush;
+        if (done == total) {
+            std::cout << std::endl;
+        }
     }
-//    std::cout << std::fixed << std::setprecision(1) << ((float)done / (float)total * 100.0) << "%" << std::endl;
 }
 
 void MainClass::printPercentMapKeys(int done, int total)
@@ -297,10 +290,10 @@ void MainClass::printPercentDump(int done, int total)
     printPercent(done, total, "Dumping");
 }
 
-void MainClass::printVersion() const
+void MainClass::printVersion()
 {
-    std::cout << "LibNfc version: " << LibNfcBusiness::getLibNfcVersion() << std::endl;
-    std::cout << "Mifare-tools version: " << LibNfcBusiness::getMifareToolsVersion() << std::endl;
+    cout() << "LibNfc version: " << LibNfcBusiness::getLibNfcVersion() << std::endl;
+    cout() << "Mifare-tools version: " << LibNfcBusiness::getMifareToolsVersion() << std::endl;
 }
 
 std::shared_ptr<NfcDeviceBusiness> MainClass::getDevice(const std::string &deviceName, std::vector<std::shared_ptr<NfcDeviceBusiness>> devices)
@@ -361,4 +354,9 @@ Result<std::vector<std::string>> MainClass::readFile(const std::string &filePath
         return Result<std::vector<std::string>>::error("Failed to open file: " + std::string(strerror(errno)));
     }
     return Result<std::vector<std::string>>::ok(lines);
+}
+
+std::ostream &MainClass::cout()
+{
+    return _outputStream == 0 ? std::cout : *_outputStream;
 }

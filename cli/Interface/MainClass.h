@@ -29,7 +29,9 @@ public:
 
     void printTrailerAccessBits(const AccessBitsDbo& accessBits);
 
-    void printVersion() const;
+    void printVersion();
+
+    std::ostream& cout();
 
     static void printPercent(int done, int total, const std::string& header);
 
@@ -41,6 +43,8 @@ private:
     int _argc;
 
     char** _argv;
+
+    std::shared_ptr<std::ostream> _outputStream;
 
 };
 
