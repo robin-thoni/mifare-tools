@@ -68,7 +68,7 @@ int CommandLineParser::showHelp(int status, bool stdErr)
         }
         std::string value = "<" + opt->getValueName();
         if (!opt->getDefaultValue().empty()) {
-            value += opt->getDefaultValue();
+            value += "=" + opt->getDefaultValue();
         }
         value += ">";
         if (value.length() > longestValue) {
@@ -84,7 +84,7 @@ int CommandLineParser::showHelp(int status, bool stdErr)
         {
             std::string value = "<" + opt->getValueName();
             if (!opt->getDefaultValue().empty()) {
-                value += opt->getDefaultValue();
+                value += "=" + opt->getDefaultValue();
             }
             value += ">";
             out << value << std::string(longestValue - value.length() + 2, ' ');
