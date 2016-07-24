@@ -14,7 +14,9 @@ public:
     enum Actions {
         Read,
         Write,
-        Map
+        Map,
+        Devices,
+        Tags
     };
 
     MainClass(int argc, char* argv[]);

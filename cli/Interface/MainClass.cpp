@@ -145,6 +145,12 @@ int MainClass::main()
         }
         action = Write;
     }
+    else if (optionDevices.isSet()) {
+        action = Devices;
+    }
+    else if (optionTags.isSet()) {
+        action = Tags;
+    }
     else {
         std::cerr << "Must select an action (map|read|write|devices|tags)" << std::endl;
         return EX_USAGE;
@@ -168,7 +174,7 @@ int MainClass::main()
         {
             auto devices = devicesResult.getData();
 
-            if (optionDevices.isSet())
+            if (action == Devices)
             {
                 for (auto device : devices) {
                     cout() << device->getConnStr() << std::endl;
@@ -192,17 +198,15 @@ int MainClass::main()
 
                         FreeFareDeviceBusiness freeFareDevice(device);
                         auto tagsResult = freeFareDevice.getTags();
-                        if (!tagsResult)
-                        {
+                        if (!tagsResult) {
                             tagsResult.print();
                             res = EX_LIB_NFC_ERROR;
                         }
 
                         auto tags = tagsResult.getData();
 
-                        if (optionTags.isSet()) {
-                            for (auto tag : tags)
-                            {
+                        if (action == Tags) {
+                            for (auto tag : tags) {
                                 cout() << "UID=" << tag->getUid() << " \tType=" << tag->getType() << std::endl;
                             }
                         }

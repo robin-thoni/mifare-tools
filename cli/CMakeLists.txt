@@ -14,3 +14,6 @@ set(SOURCE_FILES
 set(LIBS ${LIBS} ${PROJECT_NAME})
 add_executable(${PROJECT_NAME}-cli ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME}-cli ${LIBS})
+
+install(TARGETS ${PROJECT_NAME}-cli
+        RUNTIME DESTINATION bin)
